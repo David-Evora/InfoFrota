@@ -1,0 +1,1 @@
+anthropic>=0.40   # só se usar o provider anthropic; o resto é biblioteca padrão
