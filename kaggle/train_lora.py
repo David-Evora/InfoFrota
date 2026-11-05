@@ -7,13 +7,21 @@
 
 # %% 2. repositório e dados
 import json, os, shutil, subprocess, sys, glob, zipfile
-zips = glob.glob("/kaggle/input/*/*.zip")
-assert zips, "adicione o dataset com infofrota-ai.zip"
-with zipfile.ZipFile(zips[0]) as z: z.extractall("/kaggle/working")
-REPO = next(p for p in glob.glob("/kaggle/working/*") if os.path.exists(p + "/infofrota_ai"))
+# o Kaggle costuma extrair o zip sozinho; procura a raiz do repo pelo generate_data.py
+achados = glob.glob("/kaggle/input/**/scripts/generate_data.py", recursive=True)
+if not achados:
+    zips = glob.glob("/kaggle/input/**/*.zip", recursive=True)
+    assert zips, "nenhum zip/pasta do repo em /kaggle/input"
+    with zipfile.ZipFile(zips[0]) as z:
+        z.extractall("/kaggle/work_src")
+    achados = glob.glob("/kaggle/work_src/**/scripts/generate_data.py", recursive=True)
+assert achados, "generate_data.py não encontrado: o dataset está incompleto"
+SRC = os.path.dirname(os.path.dirname(achados[0]))
+REPO = "/kaggle/working/infofrota-ai"
+shutil.copytree(SRC, REPO, dirs_exist_ok=True)   # /kaggle/input é somente leitura
 os.chdir(REPO); sys.path.insert(0, REPO)
 
-# O CSV de linhas não fica no repositório público. Adicione-o como segundo input do Kaggle.
+# O CSV de linhas (CC0) já vem no repositório; este bloco só age se ele estiver ausente.
 CSV_LOCAL = os.path.join(REPO, "data", "linhas_ceturbes.csv")
 if not os.path.exists(CSV_LOCAL):
     csvs = glob.glob("/kaggle/input/*/linhas_ceturbes.csv")
@@ -29,6 +37,7 @@ BASE = "unsloth/Llama-3.1-8B-Instruct"   # mesmos pesos do Llama-3.1-8B-Instruct
 OUT = "/kaggle/working/lora"
 
 # %% 3. tokenização (perda só na resposta do assistente)
+import os; os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from datasets import Dataset
 from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,
@@ -54,23 +63,30 @@ tr, va = carregar("training/train_chat.jsonl"), carregar("training/val_chat.json
 print(len(tr), len(va), "tokens máx:", max(len(x["input_ids"]) for x in tr))
 
 # %% 4. modelo 4 bits + LoRA
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, get_peft_model
+# Sem prepare_model_for_kbit_training: ele converte embeddings e lm_head para fp32 (+4 GB) e estoura a T4.
 model = AutoModelForCausalLM.from_pretrained(
-    BASE, device_map={"": 0}, torch_dtype=torch.float16,
+    BASE, device_map={"": 0}, dtype=torch.float16,
     quantization_config=BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                            bnb_4bit_use_double_quant=True,
                                            bnb_4bit_compute_dtype=torch.float16))
-model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+model.config.use_cache = False
+model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+model.enable_input_require_grads()
 model = get_peft_model(model, LoraConfig(
     r=16, lora_alpha=32, lora_dropout=0.05, task_type="CAUSAL_LM",
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]))
+for p in model.parameters():           # só o LoRA fica em fp32 (exigência do fp16 do Trainer)
+    if p.requires_grad:
+        p.data = p.data.float()
 model.print_trainable_parameters()
+print(torch.cuda.memory_allocated() / 1e9)
 
 # %% 5. treino (~3 épocas)
 args = TrainingArguments(
     output_dir="/kaggle/working/ckpt", num_train_epochs=3, per_device_train_batch_size=1,
     gradient_accumulation_steps=16, learning_rate=2e-4, lr_scheduler_type="cosine",
-    warmup_ratio=0.05, fp16=True, logging_steps=5, eval_strategy="epoch",
+    warmup_steps=7, fp16=True, logging_steps=5, eval_strategy="epoch",
     save_strategy="no", optim="paged_adamw_8bit", report_to="none", seed=42,
     per_device_eval_batch_size=1)
 Trainer(model=model, args=args, train_dataset=tr, eval_dataset=va,

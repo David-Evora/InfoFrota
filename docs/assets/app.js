@@ -49,12 +49,12 @@
 
   const exampleResponse = {
     line: {
-      answer: 'Neste cenário fictício, as linhas 502 e 562 aparecem com os maiores percentuais médios de ocupação. Em uma integração real, o assistente consultaria os registros consolidados e apresentaria o período analisado.',
-      sql: "SELECT linha_numero, AVG(media_percentual) AS ocupacao_media\nFROM resumos_hora\nGROUP BY linha_numero\nORDER BY ocupacao_media DESC\nLIMIT 5;"
+      answer: 'Neste cenário fictício, as linhas 591 e 562 aparecem com os maiores percentuais médios de ocupação. Em uma integração real, o assistente consultaria os registros consolidados e apresentaria o período analisado.',
+      sql: "SELECT l.numero, ROUND(AVG(d.media_percentual), 1) AS ocupacao_media\nFROM resumos_dia d\nJOIN linhas l ON l.id = d.linha_id\nGROUP BY l.id\nORDER BY ocupacao_media DESC\nLIMIT 5;"
     },
     time: {
       answer: 'Neste exemplo, a curva ilustrativa destaca maior demanda no fim da tarde. Uma análise real compararia dias equivalentes e consideraria calendário, linha e condições climáticas.',
-      sql: "SELECT hora, AVG(media_percentual) AS ocupacao_media\nFROM v_relatorio_linha_hora\nGROUP BY hora\nORDER BY hora;"
+      sql: "SELECT hora, ROUND(AVG(media_percentual), 1) AS ocupacao_media\nFROM v_relatorio_linha_hora\nGROUP BY hora\nORDER BY hora;"
     },
     generic: {
       answer: 'Esta é uma resposta de demonstração. Na versão integrada, a pergunta seria interpretada pelo módulo InfoFrota AI e o contexto relevante do banco seria recuperado antes da geração do SQL.',
