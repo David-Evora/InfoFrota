@@ -1,0 +1,1636 @@
+[
+ {
+  "id": "F01",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "cadastro",
+  "pergunta": "Quantas linhas a CETURBES tem cadastradas?",
+  "sql": "SELECT COUNT(*) FROM linhas",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    165
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F02",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "cadastro",
+  "pergunta": "Quais linhas são monitoradas por sensor de lotação?",
+  "sql": "SELECT numero FROM linhas WHERE monitorada = 1 ORDER BY numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "500"
+   ],
+   [
+    "501"
+   ],
+   [
+    "505"
+   ],
+   [
+    "508"
+   ],
+   [
+    "510"
+   ],
+   [
+    "514"
+   ],
+   [
+    "531"
+   ],
+   [
+    "536"
+   ],
+   [
+    "559"
+   ],
+   [
+    "562"
+   ],
+   [
+    "563"
+   ],
+   [
+    "591"
+   ],
+   [
+    "860"
+   ],
+   [
+    "875"
+   ],
+   [
+    "901"
+   ],
+   [
+    "912"
+   ]
+  ],
+  "n_linhas": 16
+ },
+ {
+  "id": "F03",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "cadastro",
+  "pergunta": "Quantas linhas são do tipo circular?",
+  "sql": "SELECT COUNT(*) FROM linhas WHERE tipo = 'circular'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    17
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F04",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "frota",
+  "pergunta": "Quantos ônibus estão em manutenção?",
+  "sql": "SELECT COUNT(*) FROM onibus WHERE status = 'manutencao'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    5
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F05",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "frota",
+  "pergunta": "Quais modelos de ônibus existem na frota?",
+  "sql": "SELECT DISTINCT modelo FROM onibus ORDER BY modelo",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "modelo"
+  ],
+  "resultado_esperado": [
+   [
+    "Caio Apache"
+   ],
+   [
+    "Marcopolo Torino"
+   ],
+   [
+    "Mercedes-Benz O-500"
+   ],
+   [
+    "Volvo B270F"
+   ],
+   [
+    "Volvo B340M articulado"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "F06",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "cadastro",
+  "pergunta": "Qual é o nome da linha 562?",
+  "sql": "SELECT nome FROM linhas WHERE numero = '562'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "nome"
+  ],
+  "resultado_esperado": [
+   [
+    "T. LARANJEIRAS / T. CAMPO GRANDE VIA RETA DA PENHA"
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F07",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "paradas",
+  "pergunta": "Quantas paradas cadastradas ficam em Serra?",
+  "sql": "SELECT COUNT(*) FROM paradas WHERE municipio = 'Serra'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    4
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F08",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "viagens",
+  "pergunta": "Quantas viagens foram canceladas no período?",
+  "sql": "SELECT COUNT(*) FROM viagens WHERE status = 'cancelada'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    450
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F09",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "alertas",
+  "pergunta": "Quantos alertas críticos foram gerados no período?",
+  "sql": "SELECT COUNT(*) FROM alertas WHERE tipo = 'CRITICO'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    639
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F10",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "calendario",
+  "pergunta": "Quais feriados aparecem no calendário e em que datas?",
+  "sql": "SELECT data, feriado_nome FROM calendario WHERE tipo_dia = 'feriado' ORDER BY data",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "data",
+   "feriado_nome"
+  ],
+  "resultado_esperado": [
+   [
+    "2026-10-12",
+    "Nossa Senhora Aparecida"
+   ],
+   [
+    "2026-11-02",
+    "Finados"
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "F11",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "frota",
+  "pergunta": "Qual é a capacidade do ônibus de placa SIN-0001?",
+  "sql": "SELECT capacidade FROM onibus WHERE placa = 'SIN-0001'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "capacidade"
+  ],
+  "resultado_esperado": [
+   [
+    80
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F12",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "viagens",
+  "pergunta": "Quantas viagens concluídas houve em 20/10/2026?",
+  "sql": "SELECT COUNT(*) FROM viagens WHERE date(data_inicio) = '2026-10-20' AND status = 'concluida'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    1025
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F13",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "lotacao",
+  "pergunta": "Qual foi o maior percentual de lotação já registrado?",
+  "sql": "SELECT MAX(percentual) FROM registros_ocupacao",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "MAX(percentual)"
+  ],
+  "resultado_esperado": [
+   [
+    110.0
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F14",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "frota",
+  "pergunta": "Quantos ônibus ativos tem a linha 531?",
+  "sql": "SELECT COUNT(*) FROM onibus o JOIN linhas l ON l.id = o.linha_padrao_id WHERE l.numero = '531' AND o.status = 'ativo'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(*)"
+  ],
+  "resultado_esperado": [
+   [
+    5
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "F15",
+  "tipo": "sql",
+  "dificuldade": "facil",
+  "categoria": "paradas",
+  "pergunta": "Em quais municípios existem paradas cadastradas?",
+  "sql": "SELECT DISTINCT municipio FROM paradas ORDER BY municipio",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "municipio"
+  ],
+  "resultado_esperado": [
+   [
+    "Cariacica"
+   ],
+   [
+    "Serra"
+   ],
+   [
+    "Viana"
+   ],
+   [
+    "Vila Velha"
+   ],
+   [
+    "Vitória"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "M01",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "lotacao",
+  "pergunta": "Qual a lotação média de cada linha monitorada, da mais para a menos lotada?",
+  "sql": "SELECT l.numero, ROUND(AVG(d.media_percentual), 1) AS media FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id GROUP BY l.id ORDER BY media DESC, l.numero",
+  "ordenada": true,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "562",
+    28.9
+   ],
+   [
+    "591",
+    28.4
+   ],
+   [
+    "508",
+    28.1
+   ],
+   [
+    "531",
+    27.6
+   ],
+   [
+    "501",
+    25.7
+   ],
+   [
+    "505",
+    25.1
+   ],
+   [
+    "500",
+    22.6
+   ],
+   [
+    "510",
+    20.2
+   ],
+   [
+    "536",
+    19.8
+   ],
+   [
+    "559",
+    18.9
+   ],
+   [
+    "901",
+    17.9
+   ],
+   [
+    "514",
+    17.8
+   ],
+   [
+    "912",
+    16.2
+   ],
+   [
+    "860",
+    14.3
+   ],
+   [
+    "875",
+    13.1
+   ],
+   [
+    "563",
+    5.1
+   ]
+  ],
+  "n_linhas": 16
+ },
+ {
+  "id": "M02",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "alertas",
+  "pergunta": "Quais são as 5 linhas com mais alertas críticos?",
+  "sql": "SELECT l.numero FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' GROUP BY l.id ORDER BY COUNT(*) DESC, l.numero LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "562"
+   ],
+   [
+    "591"
+   ],
+   [
+    "531"
+   ],
+   [
+    "508"
+   ],
+   [
+    "536"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "M03",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "viagens",
+  "pergunta": "Quantas viagens concluídas cada linha monitorada fez no período?",
+  "sql": "SELECT l.numero, COUNT(*) AS viagens FROM viagens v JOIN linhas l ON l.id = v.linha_id WHERE v.status = 'concluida' GROUP BY l.id ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero",
+   "viagens"
+  ],
+  "resultado_esperado": [
+   [
+    "500",
+    1887
+   ],
+   [
+    "501",
+    1889
+   ],
+   [
+    "505",
+    1883
+   ],
+   [
+    "508",
+    1896
+   ],
+   [
+    "510",
+    1894
+   ],
+   [
+    "514",
+    1893
+   ],
+   [
+    "531",
+    1889
+   ],
+   [
+    "536",
+    1880
+   ],
+   [
+    "559",
+    1890
+   ],
+   [
+    "562",
+    1896
+   ],
+   [
+    "563",
+    416
+   ],
+   [
+    "591",
+    1898
+   ],
+   [
+    "860",
+    1888
+   ],
+   [
+    "875",
+    1886
+   ],
+   [
+    "901",
+    1900
+   ],
+   [
+    "912",
+    1885
+   ]
+  ],
+  "n_linhas": 16
+ },
+ {
+  "id": "M04",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "horario",
+  "pergunta": "Qual hora do dia tem a maior lotação média em dias úteis?",
+  "sql": "SELECT CAST(strftime('%H', rh.data_hora) AS INTEGER) AS hora FROM resumos_hora rh JOIN calendario k ON k.data = date(rh.data_hora) WHERE rh.parada_id IS NULL AND k.tipo_dia = 'util' GROUP BY hora ORDER BY AVG(rh.media_percentual) DESC LIMIT 1",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "hora"
+  ],
+  "resultado_esperado": [
+   [
+    7
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "M05",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "calendario",
+  "pergunta": "Qual a lotação média por tipo de dia (útil, sábado, domingo, feriado)?",
+  "sql": "SELECT k.tipo_dia, ROUND(AVG(d.media_percentual), 1) AS media FROM resumos_dia d JOIN calendario k ON k.data = d.data GROUP BY k.tipo_dia ORDER BY media DESC",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "tipo_dia",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "util",
+    25.3
+   ],
+   [
+    "sabado",
+    13.6
+   ],
+   [
+    "feriado",
+    10.4
+   ],
+   [
+    "domingo",
+    9.1
+   ]
+  ],
+  "n_linhas": 4
+ },
+ {
+  "id": "M06",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "paradas",
+  "pergunta": "Quais são as 5 paradas com mais leituras críticas (90% ou mais de lotação)?",
+  "sql": "SELECT p.nome FROM registros_ocupacao r JOIN paradas p ON p.id = r.parada_id WHERE r.percentual >= 90 GROUP BY p.id ORDER BY COUNT(*) DESC, p.nome LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "nome"
+  ],
+  "resultado_esperado": [
+   [
+    "Reta da Penha"
+   ],
+   [
+    "Terceira Ponte"
+   ],
+   [
+    "Terminal Jardim América"
+   ],
+   [
+    "Terminal Carapina"
+   ],
+   [
+    "Jardim Camburi"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "M07",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "passageiros",
+  "pergunta": "Quais as 5 linhas que mais embarcaram passageiros no período?",
+  "sql": "SELECT l.numero FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id GROUP BY l.id ORDER BY SUM(d.total_embarcaram) DESC, l.numero LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "508"
+   ],
+   [
+    "591"
+   ],
+   [
+    "501"
+   ],
+   [
+    "562"
+   ],
+   [
+    "505"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "M08",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "alertas",
+  "pergunta": "Quais linhas tiveram mais de 100 alertas de atenção no período?",
+  "sql": "SELECT l.numero FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'ATENCAO' GROUP BY l.id HAVING COUNT(*) > 100 ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "501"
+   ],
+   [
+    "505"
+   ],
+   [
+    "508"
+   ],
+   [
+    "531"
+   ],
+   [
+    "536"
+   ],
+   [
+    "562"
+   ],
+   [
+    "591"
+   ]
+  ],
+  "n_linhas": 7
+ },
+ {
+  "id": "M09",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "clima",
+  "pergunta": "Em dias úteis, às 7h da manhã, qual a lotação média com chuva e sem chuva (considere chuva quando chuva_mm > 0)? Uma linha para cada caso.",
+  "sql": "SELECT CASE WHEN v.chuva_mm > 0 THEN 'com_chuva' ELSE 'sem_chuva' END AS clima, ROUND(AVG(v.media_percentual), 1) AS media FROM v_lotacao_clima v JOIN calendario k ON k.data = date(v.data_hora) WHERE k.tipo_dia = 'util' AND strftime('%H', v.data_hora) = '07' GROUP BY clima",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "clima",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "com_chuva",
+    38.7
+   ],
+   [
+    "sem_chuva",
+    35.3
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "M10",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "clima",
+  "pergunta": "Em quantos dias choveu no período?",
+  "sql": "SELECT COUNT(DISTINCT date(data_hora)) FROM clima_hora WHERE chuva_mm > 0",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(DISTINCT date(data_hora))"
+  ],
+  "resultado_esperado": [
+   [
+    10
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "M11",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "alertas",
+  "pergunta": "Quais ações de precaução foram registradas nos alertas e quantas vezes cada uma?",
+  "sql": "SELECT precaucao_descricao, COUNT(*) AS vezes FROM alertas WHERE em_precaucao = 1 GROUP BY precaucao_descricao ORDER BY vezes DESC",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "precaucao_descricao",
+   "vezes"
+  ],
+  "resultado_esperado": [
+   [
+    "Fiscal acionado no ponto",
+    60
+   ],
+   [
+    "Ônibus de reforço despachado",
+    54
+   ],
+   [
+    "Viagem extra programada",
+    49
+   ],
+   [
+    "Intervalo reduzido na linha",
+    48
+   ]
+  ],
+  "n_linhas": 4
+ },
+ {
+  "id": "M12",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "frota",
+  "pergunta": "Quantos ônibus existem de cada modelo?",
+  "sql": "SELECT modelo, COUNT(*) AS total FROM onibus GROUP BY modelo ORDER BY total DESC, modelo",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "modelo",
+   "total"
+  ],
+  "resultado_esperado": [
+   [
+    "Volvo B270F",
+    19
+   ],
+   [
+    "Mercedes-Benz O-500",
+    17
+   ],
+   [
+    "Volvo B340M articulado",
+    14
+   ],
+   [
+    "Caio Apache",
+    13
+   ],
+   [
+    "Marcopolo Torino",
+    7
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "M13",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "frota",
+  "pergunta": "Quais são os 3 ônibus que mais fizeram viagens concluídas?",
+  "sql": "SELECT o.placa FROM viagens v JOIN onibus o ON o.id = v.onibus_id WHERE v.status = 'concluida' GROUP BY o.id ORDER BY COUNT(*) DESC, o.placa LIMIT 3",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "placa"
+  ],
+  "resultado_esperado": [
+   [
+    "SIN-0061"
+   ],
+   [
+    "SIN-0040"
+   ],
+   [
+    "SIN-0059"
+   ]
+  ],
+  "n_linhas": 3
+ },
+ {
+  "id": "M14",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "viagens",
+  "pergunta": "Quais linhas têm duração média de viagem acima de 45 minutos?",
+  "sql": "SELECT l.numero FROM viagens v JOIN linhas l ON l.id = v.linha_id WHERE v.status = 'concluida' GROUP BY l.id HAVING AVG((julianday(v.data_fim) - julianday(v.data_inicio)) * 1440) > 45 ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "501"
+   ],
+   [
+    "508"
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "M15",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "alertas",
+  "pergunta": "Para cada sentido (ida e volta), quantas viagens tiveram alerta crítico?",
+  "sql": "SELECT v.sentido, COUNT(DISTINCT a.viagem_id) AS viagens FROM alertas a JOIN viagens v ON v.id = a.viagem_id WHERE a.tipo = 'CRITICO' GROUP BY v.sentido",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "sentido",
+   "viagens"
+  ],
+  "resultado_esperado": [
+   [
+    "ida",
+    289
+   ],
+   [
+    "volta",
+    350
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "M16",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "calendario",
+  "pergunta": "Qual linha é a mais lotada aos sábados?",
+  "sql": "SELECT l.numero FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id JOIN calendario k ON k.data = d.data WHERE k.tipo_dia = 'sabado' GROUP BY l.id ORDER BY AVG(d.media_percentual) DESC LIMIT 1",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "591"
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "M17",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "alertas",
+  "pergunta": "Qual foi o dia com mais alertas críticos?",
+  "sql": "SELECT date(criado_em) AS dia FROM alertas WHERE tipo = 'CRITICO' GROUP BY dia ORDER BY COUNT(*) DESC LIMIT 1",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "dia"
+  ],
+  "resultado_esperado": [
+   [
+    "2026-10-09"
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "M18",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "paradas",
+  "pergunta": "Quais são as paradas da linha 508 no sentido de ida, em ordem?",
+  "sql": "SELECT p.nome FROM linha_paradas lp JOIN linhas l ON l.id = lp.linha_id JOIN paradas p ON p.id = lp.parada_id WHERE l.numero = '508' AND lp.sentido = 'ida' ORDER BY lp.ordem",
+  "ordenada": true,
+  "esperado_vazio": false,
+  "colunas": [
+   "nome"
+  ],
+  "resultado_esperado": [
+   [
+    "Terminal Laranjeiras"
+   ],
+   [
+    "Terminal Carapina"
+   ],
+   [
+    "Jardim Camburi"
+   ],
+   [
+    "Terceira Ponte"
+   ],
+   [
+    "Terminal Vila Velha"
+   ],
+   [
+    "Terminal Itaparica"
+   ]
+  ],
+  "n_linhas": 6
+ },
+ {
+  "id": "M19",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "paradas",
+  "pergunta": "Quantas linhas passam pela parada Reta da Penha?",
+  "sql": "SELECT COUNT(DISTINCT lp.linha_id) FROM linha_paradas lp JOIN paradas p ON p.id = lp.parada_id WHERE p.nome = 'Reta da Penha'",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(DISTINCT lp.linha_id)"
+  ],
+  "resultado_esperado": [
+   [
+    6
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "M20",
+  "tipo": "sql",
+  "dificuldade": "medio",
+  "categoria": "paradas",
+  "pergunta": "Qual a lotação média registrada em cada município?",
+  "sql": "SELECT p.municipio, ROUND(AVG(r.percentual), 1) AS media FROM registros_ocupacao r JOIN paradas p ON p.id = r.parada_id GROUP BY p.municipio ORDER BY media DESC",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "municipio",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "Vitória",
+    39.6
+   ],
+   [
+    "Vila Velha",
+    22.2
+   ],
+   [
+    "Viana",
+    22.2
+   ],
+   [
+    "Cariacica",
+    21.1
+   ],
+   [
+    "Serra",
+    18.8
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "D01",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "horario",
+  "pergunta": "Para cada linha monitorada, em que hora do dia a lotação média é mais alta?",
+  "sql": "WITH m AS ( SELECT linha_id, CAST(strftime('%H', data_hora) AS INTEGER) AS hora, AVG(media_percentual) AS a FROM resumos_hora WHERE parada_id IS NULL GROUP BY linha_id, hora), r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY linha_id ORDER BY a DESC) AS rn FROM m) SELECT l.numero, r.hora FROM r JOIN linhas l ON l.id = r.linha_id WHERE r.rn = 1 ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero",
+   "hora"
+  ],
+  "resultado_esperado": [
+   [
+    "500",
+    18
+   ],
+   [
+    "501",
+    18
+   ],
+   [
+    "505",
+    18
+   ],
+   [
+    "508",
+    7
+   ],
+   [
+    "510",
+    7
+   ],
+   [
+    "514",
+    17
+   ],
+   [
+    "531",
+    18
+   ],
+   [
+    "536",
+    17
+   ],
+   [
+    "559",
+    17
+   ],
+   [
+    "562",
+    7
+   ],
+   [
+    "563",
+    22
+   ],
+   [
+    "591",
+    18
+   ],
+   [
+    "860",
+    7
+   ],
+   [
+    "875",
+    7
+   ],
+   [
+    "901",
+    7
+   ],
+   [
+    "912",
+    17
+   ]
+  ],
+  "n_linhas": 16
+ },
+ {
+  "id": "D02",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "lotacao",
+  "pergunta": "Quais as 5 linhas com maior proporção de leituras críticas (90% ou mais) sobre o total de leituras?",
+  "sql": "SELECT l.numero, ROUND(100.0 * SUM(r.percentual >= 90) / COUNT(*), 2) AS pct_criticas FROM registros_ocupacao r JOIN viagens v ON v.id = r.viagem_id JOIN linhas l ON l.id = v.linha_id GROUP BY l.id ORDER BY pct_criticas DESC LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero",
+   "pct_criticas"
+  ],
+  "resultado_esperado": [
+   [
+    "562",
+    2.45
+   ],
+   [
+    "591",
+    2.03
+   ],
+   [
+    "531",
+    1.59
+   ],
+   [
+    "508",
+    1.2
+   ],
+   [
+    "536",
+    1.12
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "D03",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "clima",
+  "pergunta": "Na linha 562, compare a lotação média nos horários de 7h e 17h com e sem chuva (considere chuva quando chuva_mm > 0). Uma linha para cada caso.",
+  "sql": "SELECT CASE WHEN chuva_mm > 0 THEN 'com_chuva' ELSE 'sem_chuva' END AS clima, ROUND(AVG(media_percentual), 1) AS media FROM v_lotacao_clima WHERE linha_numero = '562' AND strftime('%H', data_hora) IN ('07', '17') GROUP BY clima",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "clima",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "com_chuva",
+    43.8
+   ],
+   [
+    "sem_chuva",
+    39.3
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "D04",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "paradas",
+  "pergunta": "Em cada município, qual parada tem a maior média de embarque por leitura?",
+  "sql": "WITH m AS ( SELECT p.municipio, p.nome, AVG(r.embarcaram) AS a FROM registros_ocupacao r JOIN paradas p ON p.id = r.parada_id GROUP BY p.id), r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY municipio ORDER BY a DESC) AS rn FROM m) SELECT municipio, nome FROM r WHERE rn = 1 ORDER BY municipio",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "municipio",
+   "nome"
+  ],
+  "resultado_esperado": [
+   [
+    "Cariacica",
+    "Terminal Jardim América"
+   ],
+   [
+    "Serra",
+    "Serra Sede"
+   ],
+   [
+    "Viana",
+    "Vila Bethânia"
+   ],
+   [
+    "Vila Velha",
+    "Terceira Ponte"
+   ],
+   [
+    "Vitória",
+    "Praça Coelho e Campos"
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "D05",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "alertas",
+  "pergunta": "Quais as 5 linhas com maior percentual de viagens que tiveram pelo menos um alerta?",
+  "sql": "SELECT l.numero, ROUND(100.0 * COUNT(DISTINCT a.viagem_id) / COUNT(DISTINCT v.id), 1) AS pct_viagens FROM viagens v JOIN linhas l ON l.id = v.linha_id LEFT JOIN alertas a ON a.viagem_id = v.id WHERE v.status = 'concluida' GROUP BY l.id ORDER BY pct_viagens DESC LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero",
+   "pct_viagens"
+  ],
+  "resultado_esperado": [
+   [
+    "562",
+    15.0
+   ],
+   [
+    "591",
+    13.5
+   ],
+   [
+    "531",
+    12.3
+   ],
+   [
+    "508",
+    11.0
+   ],
+   [
+    "536",
+    9.8
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "D06",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "alertas",
+  "pergunta": "Quais os 5 alertas críticos que levaram mais tempo para serem resolvidos? Mostre a linha e os minutos.",
+  "sql": "SELECT a.id, l.numero, ROUND((julianday(a.resolvido_em) - julianday(a.criado_em)) * 1440, 1) AS minutos FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND a.resolvido = 1 ORDER BY minutos DESC, a.id LIMIT 5",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "id",
+   "numero",
+   "minutos"
+  ],
+  "resultado_esperado": [
+   [
+    1838,
+    "508",
+    54.0
+   ],
+   [
+    991,
+    "508",
+    48.0
+   ],
+   [
+    472,
+    "531",
+    44.4
+   ],
+   [
+    1078,
+    "508",
+    41.3
+   ],
+   [
+    449,
+    "508",
+    40.9
+   ]
+  ],
+  "n_linhas": 5
+ },
+ {
+  "id": "D07",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "calendario",
+  "pergunta": "Qual a média diária de passageiros embarcados (todas as linhas) para cada dia da semana?",
+  "sql": "SELECT k.dia_semana, ROUND(AVG(t.emb), 0) AS media_embarques FROM (SELECT date(data_hora) AS d, SUM(total_embarcaram) AS emb FROM resumos_hora WHERE parada_id IS NULL GROUP BY d) t JOIN calendario k ON k.data = t.d GROUP BY k.dia_semana",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "dia_semana",
+   "media_embarques"
+  ],
+  "resultado_esperado": [
+   [
+    "domingo",
+    15123.0
+   ],
+   [
+    "quarta",
+    50739.0
+   ],
+   [
+    "quinta",
+    51282.0
+   ],
+   [
+    "segunda",
+    37446.0
+   ],
+   [
+    "sexta",
+    51286.0
+   ],
+   [
+    "sábado",
+    22561.0
+   ],
+   [
+    "terça",
+    50401.0
+   ]
+  ],
+  "n_linhas": 7
+ },
+ {
+  "id": "D08",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "calendario",
+  "pergunta": "Na linha 531, qual a lotação média para cada tipo de dia (útil, sábado, domingo e feriado)?",
+  "sql": "SELECT k.tipo_dia, ROUND(AVG(d.media_percentual), 1) AS media FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id JOIN calendario k ON k.data = d.data WHERE l.numero = '531' GROUP BY k.tipo_dia ORDER BY media DESC",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "tipo_dia",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "util",
+    34.0
+   ],
+   [
+    "sabado",
+    18.0
+   ],
+   [
+    "feriado",
+    13.5
+   ],
+   [
+    "domingo",
+    12.2
+   ]
+  ],
+  "n_linhas": 4
+ },
+ {
+  "id": "D09",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "lotacao",
+  "pergunta": "Quais linhas passaram de 100% de lotação máxima em mais de 5 dias diferentes?",
+  "sql": "SELECT l.numero FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id WHERE d.max_percentual > 100 GROUP BY l.id HAVING COUNT(DISTINCT d.data) > 5 ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "501"
+   ],
+   [
+    "505"
+   ],
+   [
+    "508"
+   ],
+   [
+    "531"
+   ],
+   [
+    "536"
+   ],
+   [
+    "562"
+   ],
+   [
+    "591"
+   ],
+   [
+    "901"
+   ]
+  ],
+  "n_linhas": 8
+ },
+ {
+  "id": "D10",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "paradas",
+  "pergunta": "Em viagens de volta que saem às 17h ou 18h, quais paradas têm lotação média acima de 50%?",
+  "sql": "SELECT p.nome FROM registros_ocupacao r JOIN viagens v ON v.id = r.viagem_id JOIN paradas p ON p.id = r.parada_id WHERE v.sentido = 'volta' AND CAST(strftime('%H', v.data_inicio) AS INTEGER) IN (17, 18) GROUP BY p.id HAVING AVG(r.percentual) > 50 ORDER BY p.nome",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "nome"
+  ],
+  "resultado_esperado": [
+   [
+    "Jardim Camburi"
+   ],
+   [
+    "Praça Coelho e Campos"
+   ],
+   [
+    "Reta da Penha"
+   ],
+   [
+    "Shopping Vila Velha"
+   ],
+   [
+    "Terceira Ponte"
+   ],
+   [
+    "Terminal Carapina"
+   ],
+   [
+    "Terminal Jardim América"
+   ],
+   [
+    "Vila Bethânia"
+   ]
+  ],
+  "n_linhas": 8
+ },
+ {
+  "id": "D11",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "frota",
+  "pergunta": "Entre os ônibus da linha 562, qual tem a maior lotação média e quantas viagens fez?",
+  "sql": "SELECT o.placa, COUNT(DISTINCT v.id) AS viagens FROM viagens v JOIN onibus o ON o.id = v.onibus_id JOIN linhas l ON l.id = v.linha_id JOIN registros_ocupacao r ON r.viagem_id = v.id WHERE l.numero = '562' GROUP BY o.id ORDER BY AVG(r.percentual) DESC LIMIT 1",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "placa",
+   "viagens"
+  ],
+  "resultado_esperado": [
+   [
+    "SIN-0046",
+    303
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "D12",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "tendencia",
+  "pergunta": "A lotação média da linha 562 na última semana de dados (28/10 a 03/11) foi maior ou menor que na primeira (05/10 a 11/10)? Mostre uma linha para cada semana, com a média.",
+  "sql": "SELECT CASE WHEN d.data BETWEEN '2026-10-05' AND '2026-10-11' THEN 'primeira_semana' ELSE 'ultima_semana' END AS semana, ROUND(AVG(d.media_percentual), 1) AS media FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id WHERE l.numero = '562' AND (d.data BETWEEN '2026-10-05' AND '2026-10-11' OR d.data BETWEEN '2026-10-28' AND '2026-11-03') GROUP BY semana ORDER BY semana",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "semana",
+   "media"
+  ],
+  "resultado_esperado": [
+   [
+    "primeira_semana",
+    29.9
+   ],
+   [
+    "ultima_semana",
+    27.0
+   ]
+  ],
+  "n_linhas": 2
+ },
+ {
+  "id": "D13",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "clima",
+  "pergunta": "Quantas viagens tiveram lotação de 75% ou mais em alguma parada e começaram em uma hora com condição 'chuva' ou 'chuva_forte'?",
+  "sql": "SELECT COUNT(DISTINCT v.id) FROM viagens v JOIN registros_ocupacao r ON r.viagem_id = v.id JOIN clima_hora c ON c.data_hora = strftime('%Y-%m-%d %H:00:00', v.data_inicio) WHERE c.condicao IN ('chuva', 'chuva_forte') AND r.percentual >= 75",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "COUNT(DISTINCT v.id)"
+  ],
+  "resultado_esperado": [
+   [
+    107
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "D14",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "horario",
+  "pergunta": "Em dias úteis, quais linhas têm lotação média acima de 45% nas viagens de ida que saem entre 6h e 8h59?",
+  "sql": "SELECT l.numero FROM registros_ocupacao r JOIN viagens v ON v.id = r.viagem_id JOIN linhas l ON l.id = v.linha_id JOIN calendario k ON k.data = date(v.data_inicio) WHERE k.tipo_dia = 'util' AND v.sentido = 'ida' AND CAST(strftime('%H', v.data_inicio) AS INTEGER) BETWEEN 6 AND 8 GROUP BY l.id HAVING AVG(r.percentual) > 45 ORDER BY l.numero",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "501"
+   ],
+   [
+    "505"
+   ],
+   [
+    "508"
+   ],
+   [
+    "531"
+   ],
+   [
+    "562"
+   ],
+   [
+    "591"
+   ]
+  ],
+  "n_linhas": 6
+ },
+ {
+  "id": "D15",
+  "tipo": "sql",
+  "dificuldade": "dificil",
+  "categoria": "horario",
+  "pergunta": "Quais 3 linhas têm a maior diferença entre a lotação média das 7h e a das 12h?",
+  "sql": "SELECT l.numero FROM (SELECT linha_id, media_percentual, CAST(strftime('%H', data_hora) AS INTEGER) AS h FROM resumos_hora WHERE parada_id IS NULL) rh JOIN linhas l ON l.id = rh.linha_id GROUP BY l.id HAVING AVG(CASE WHEN rh.h = 7 THEN rh.media_percentual END) IS NOT NULL AND AVG(CASE WHEN rh.h = 12 THEN rh.media_percentual END) IS NOT NULL ORDER BY AVG(CASE WHEN rh.h = 7 THEN rh.media_percentual END) - AVG(CASE WHEN rh.h = 12 THEN rh.media_percentual END) DESC LIMIT 3",
+  "ordenada": false,
+  "esperado_vazio": false,
+  "colunas": [
+   "numero"
+  ],
+  "resultado_esperado": [
+   [
+    "562"
+   ],
+   [
+    "508"
+   ],
+   [
+    "591"
+   ]
+  ],
+  "n_linhas": 3
+ },
+ {
+  "id": "L01",
+  "tipo": "sql",
+  "dificuldade": "limite",
+  "categoria": "sem_dados",
+  "pergunta": "Qual foi a lotação média da linha 562 em 10/09/2026?",
+  "sql": "SELECT ROUND(AVG(d.media_percentual), 1) FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id WHERE l.numero = '562' AND d.data = '2026-09-10'",
+  "ordenada": false,
+  "esperado_vazio": true,
+  "colunas": [
+   "ROUND(AVG(d.media_percentual), 1)"
+  ],
+  "resultado_esperado": [
+   [
+    null
+   ]
+  ],
+  "n_linhas": 1
+ },
+ {
+  "id": "L02",
+  "tipo": "fora_do_escopo",
+  "dificuldade": "limite",
+  "categoria": "sem_coluna",
+  "pergunta": "Qual a posição GPS atual do ônibus SIN-0001?",
+  "sql": null,
+  "ordenada": false,
+  "esperado_vazio": false,
+  "comportamento_esperado": "Dizer que o banco não tem posição GPS (só leituras por parada) e não inventar SQL."
+ },
+ {
+  "id": "L03",
+  "tipo": "fora_do_escopo",
+  "dificuldade": "limite",
+  "categoria": "sem_coluna",
+  "pergunta": "Quantos passageiros pagaram com cartão de vale-transporte ontem?",
+  "sql": null,
+  "ordenada": false,
+  "esperado_vazio": false,
+  "comportamento_esperado": "Dizer que não há dados de pagamento no banco."
+ },
+ {
+  "id": "L04",
+  "tipo": "fora_do_escopo",
+  "dificuldade": "limite",
+  "categoria": "sem_coluna",
+  "pergunta": "Qual o nome do motorista da viagem 100?",
+  "sql": null,
+  "ordenada": false,
+  "esperado_vazio": false,
+  "comportamento_esperado": "Dizer que não há dados de motoristas no banco."
+ },
+ {
+  "id": "L05",
+  "tipo": "fora_do_escopo",
+  "dificuldade": "limite",
+  "categoria": "previsao",
+  "pergunta": "Qual será a lotação da linha 562 amanhã às 7h?",
+  "sql": null,
+  "ordenada": false,
+  "esperado_vazio": false,
+  "comportamento_esperado": "Dizer que o banco só tem histórico; no máximo oferecer a média histórica das 7h, deixando claro que não é previsão."
+ },
+ {
+  "id": "L06",
+  "tipo": "fora_do_escopo",
+  "dificuldade": "limite",
+  "categoria": "escrita",
+  "pergunta": "Apague todos os alertas já resolvidos.",
+  "sql": null,
+  "ordenada": false,
+  "esperado_vazio": false,
+  "comportamento_esperado": "Recusar: o assistente é somente leitura e não executa DELETE/UPDATE/INSERT."
+ }
+]
