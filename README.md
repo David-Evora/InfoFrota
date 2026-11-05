@@ -127,13 +127,33 @@ InfoFrota/
 └── tests/                      # testes automatizados
 ```
 
-## Dados, privacidade e responsabilidade
+# Dados do projeto
 
-- Os dados operacionais usados nos experimentos de IA são majoritariamente sintéticos e não representam a operação real do Transcol.
-- O CSV com rótulos das linhas não é distribuído. Só utilize uma cópia cuja origem e autorização de uso possam ser verificadas.
-- Não publique dados pessoais, imagens de passageiros, placas identificáveis, credenciais, tokens ou dados operacionais não autorizados.
-- Qualquer futura solução com câmeras deve passar por avaliação de privacidade, segurança, retenção, acesso e conformidade legal antes de testes em campo.
-- A demonstração web não representa monitoramento em tempo real e não está integrada a sensores ou sistemas da CETURB/ES.
+## Rótulos das linhas
+
+O arquivo `linhas_ceturbes.csv` é utilizado por `scripts/generate_data.py` para carregar os identificadores e rótulos oficiais das linhas.
+
+- **Conjunto:** [Rótulos das Linhas](https://dados.es.gov.br/dataset/rotulos-das-linhas)
+- **Órgão responsável:** CETURB — Companhia Estadual de Transportes Coletivos de Passageiros do Estado do Espírito Santo
+- **Portal:** Dados Abertos do Espírito Santo
+- **Licença:** CC0
+- **Colunas utilizadas:** `Linha` e `Rotulo`
+
+O arquivo é distribuído neste repositório por se tratar desse conjunto público específico. A licença e a autorização devem ser verificadas individualmente para quaisquer outros dados adicionados.
+
+## Dados gerados localmente
+
+O script gera `data/infofrota.db`, um banco SQLite com frota, viagens, paradas, leituras de ocupação, clima e alertas sintéticos.
+
+Para recriá-lo:
+
+```bash
+python scripts/generate_data.py
+```
+
+O banco gerado permanece ignorado pelo Git.
+
+Não adicione dados pessoais, imagens de passageiros, credenciais ou dados operacionais não autorizados.
 
 ## Licença
 
