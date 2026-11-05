@@ -15,8 +15,7 @@ venv/
 *.key
 
 # Generated local database and source data requiring local authorization
-data/*.db
-data/linhas_ceturbes.csv
+data/*.dbgit 
 
 # Evaluation cache and local outputs
 evaluation/cache/
