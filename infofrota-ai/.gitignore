@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments and secrets
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Generated local database and source data requiring local authorization
+data/*.db
+data/linhas_ceturbes.csv
+
+# Evaluation cache and local outputs
+evaluation/cache/
+evaluation/tmp/
+
+# Model weights, adapters and training checkpoints
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+adapter_model.*
+checkpoint-*/
+ckpt/
+outputs/
+
+# Archives / temporary copies
+*.zip
+*.tar
+*.gz
+.DS_Store
+Thumbs.db
