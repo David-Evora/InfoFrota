@@ -1,0 +1,38 @@
+# Git
+.git
+.github
+
+# Python
+__pycache__
+*.py[cod]
+.venv
+venv
+.pytest_cache
+.coverage
+htmlcov
+
+# Arquivos de ambiente e credenciais
+.env
+.env.*
+.env.api
+!.env.example
+*.pem
+*.key
+
+# Dados locais
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Arquivos experimentais
+evaluation/
+training/
+kaggle/
+notebooks/
+
+# Backups e arquivos temporários
+*.log
+*.zip
+*.tar
+*.gz

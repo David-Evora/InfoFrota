@@ -10,6 +10,7 @@ htmlcov/
 venv/
 .env
 .env.*
+.env.api
 !.env.example
 *.pem
 *.key

@@ -36,7 +36,7 @@
             {
               "id": "a1",
               "name": "api_url",
-              "value": "http://localhost:8000",
+              "value": "http://api:8000/alertas",
               "type": "string"
             },
             {

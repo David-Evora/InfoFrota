@@ -1,0 +1,67 @@
+services:
+
+  n8n:
+    image: n8nio/n8n:v3-nightly-20261106
+    container_name: infofrota-n8n
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:5678:5678"
+
+    environment:
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      TZ: America/Sao_Paulo
+
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+
+      N8N_EDITOR_BASE_URL: http://localhost:5678/
+      WEBHOOK_URL: http://localhost:5678/
+
+      N8N_SECURE_COOKIE: "false"
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+    networks:
+      - infofrota_net
+
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+
+    container_name: infofrota-api
+    restart: unless-stopped
+
+    env_file:
+      - .env.api
+
+    environment:
+      INFOFROTA_HOST: "0.0.0.0"
+      INFOFROTA_PORT: "8000"
+      INFOFROTA_DB: /app/data/infofrota.db
+
+    volumes:
+      - ./data:/app/data:ro
+
+    expose:
+      - "8000"
+
+    networks:
+      - infofrota_net
+
+
+networks:
+  infofrota_net:
+    driver: bridge
+
+
+volumes:
+  n8n_data:
+    external: true
+    name: n8n_data
