@@ -193,3 +193,20 @@ python -m infofrota_ai.evaluate --provider hf --model BASE::ADAPTADOR --prompt c
 ```
 
 Cobertura medida uma vez nas 51 perguntas respondíveis do benchmark v2.1 (só mede; não foi usada para ajustar o índice): o contexto traz 67% (63/94) das tabelas e views usadas no SQL de referência e 88% (23/26) dos valores literais categóricos. O prompt compacto já lista todas as tabelas, então o ganho esperado está nos valores válidos e nas regras. Se o RAG melhora ou não a acurácia é medido na avaliação ponta a ponta, não por esta cobertura.
+
+
+## API (`infofrota_ai/api.py`)
+
+```bash
+pip install -r requirements-api.txt
+python -m infofrota_ai.api            # http://127.0.0.1:8000 · documentação interativa em /docs
+```
+
+| Endpoint | Uso |
+|---|---|
+| `POST /perguntar` | `{"pergunta": "...", "texto": false}` → SQL, colunas, linhas, `bloqueado`, `motivo` |
+| `GET /alertas` | alertas numa janela (`tipo`, `janela_horas`, `limite`), sem LLM; usado pelo n8n |
+| `GET /resumo` | resumo de um dia por linha, sem LLM |
+| `GET /saude` | estado do serviço e período dos dados |
+
+O modelo vem das variáveis `INFOFROTA_PROVIDER`, `INFOFROTA_MODEL` e `INFOFROTA_BASE_URL` (Claude, Ollama/vLLM com o LoRA, ou o provider `hf`) e só é carregado no primeiro `/perguntar`. `INFOFROTA_API_KEY` exige o cabeçalho `X-API-Key`; `INFOFROTA_CORS` libera origens para a interface web; `INFOFROTA_LIMITE_POR_MIN` limita pedidos por IP. A guarda de SQL somente leitura é a mesma do assistente. O workflow do n8n está em `n8n/`.

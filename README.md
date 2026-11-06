@@ -66,6 +66,10 @@ Em uma avaliação zero-shot com prompt compacto e 56 perguntas (benchmark v2.1)
 | Llama 3.1 8B Instruct + LoRA | 36/56 | **64,3%** | **58,9%** |
 | Llama 3.1 8B Instruct + RAG de esquema | 25/56 | 44,6% | 41,1% |
 | Llama 3.1 8B Instruct + LoRA + RAG de esquema | 36/56 | 64,3% | 57,1% |
+| Prompt `ultra`: base | 19/56 | 33,9% | 30,4% |
+| Prompt `ultra`: base + RAG | 28/56 | 50,0% | 46,4% |
+| Prompt `ultra`: LoRA treinado com contexto, sem RAG na avaliação | 33/56 | 58,9% | 55,4% |
+| Prompt `ultra`: LoRA treinado com contexto + RAG | **39/56** | **69,6%** | **66,1%** |
 
 O resultado com LoRA representa ganho de **30,4 pontos percentuais** na métrica principal, nas mesmas condições de avaliação. O RAG de esquema elevou o modelo base em 10,7 pontos (19 para 25 acertos), mas não alterou o total do modelo com LoRA (36 em ambos): o adaptador foi treinado sem o contexto recuperado e não o aproveita de forma consistente. O conjunto v2.1 é separado dos dados de fine-tuning; os relatórios documentam limitações e casos conhecidos do teste. A comparação é experimental e restrita ao banco e às perguntas controladas, não representa desempenho em produção ou sobre dados reais de transporte.
 
