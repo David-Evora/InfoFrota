@@ -1,15 +1,12 @@
 {
-  "name": "InfoFrota - alerta de lotação crítica",
+  "name": "InfoFrota - alerta de lotação crítica (v2)",
   "nodes": [
     {
       "id": "n1",
       "name": "A cada 5 minutos",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        0,
-        0
-      ],
+      "position": [0, 0],
       "parameters": {
         "rule": {
           "interval": [
@@ -26,17 +23,14 @@
       "name": "Configuração",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        220,
-        0
-      ],
+      "position": [220, 0],
       "parameters": {
         "assignments": {
           "assignments": [
             {
               "id": "a1",
-              "name": "api_url",
-              "value": "http://api:8000/alertas",
+              "name": "api_base_url",
+              "value": "http://api:8000",
               "type": "string"
             },
             {
@@ -48,7 +42,7 @@
             {
               "id": "a3",
               "name": "webhook_url",
-              "value": "COLE_AQUI_A_URL_DO_WEBHOOK_DO_SLACK_OU_DISCORD",
+              "value": "COLE_AQUI_A_URL_DO_WEBHOOK_DO_DISCORD",
               "type": "string"
             }
           ]
@@ -61,13 +55,10 @@
       "name": "Buscar alertas críticos",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        440,
-        0
-      ],
+      "position": [460, 0],
       "parameters": {
         "method": "GET",
-        "url": "={{ $('Configuração').item.json.api_url }}/alertas",
+        "url": "={{ $('Configuração').item.json.api_base_url }}/alertas",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -102,10 +93,7 @@
       "name": "Há alertas?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [
-        660,
-        0
-      ],
+      "position": [700, 0],
       "parameters": {
         "conditions": {
           "number": [
@@ -120,33 +108,68 @@
     },
     {
       "id": "n5",
-      "name": "Montar mensagem",
+      "name": "Filtrar alertas ainda não enviados",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        880,
-        -80
-      ],
+      "position": [940, -80],
       "parameters": {
-        "jsCode": "const d = $input.first().json;\nconst linhas = d.alertas.map(a => `• Linha ${a.linha} (${a.parada || 'sem parada'}): ${a.percentual}% às ${a.criado_em}`);\nconst texto = `🚨 ${d.total} alerta(s) crítico(s) nas últimas ${d.janela_horas}h (até ${d.referencia})\\n` + linhas.join('\\n') + '\\nDados sintéticos de demonstração.';\nreturn [{ json: { text: texto, content: texto } }];"
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Deduplicação por ID. A lista só é atualizada depois que o webhook confirma o envio.\n// O static data do workflow persiste entre execuções de produção (workflow ativo).\nconst payload = $input.first()?.json ?? {};\nconst alertas = Array.isArray(payload.alertas) ? payload.alertas : [];\nconst staticData = $getWorkflowStaticData('global');\nconst idsJaEnviados = new Set((Array.isArray(staticData.alertasCriticosEnviados) ? staticData.alertasCriticosEnviados : []).map(String));\n\nconst novos = alertas.filter(alerta => alerta.id !== undefined && alerta.id !== null && !idsJaEnviados.has(String(alerta.id)));\n\nreturn novos.map(alerta => ({\n  json: {\n    ...alerta,\n    id_alerta: String(alerta.id),\n    referencia: payload.referencia ?? null,\n    janela_horas: payload.janela_horas ?? 24\n  }\n}));"
       }
     },
     {
       "id": "n6",
+      "name": "Montar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, -80],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const alertas = $input.all().map(item => item.json);\nif (alertas.length === 0) return [];\n\nconst primeiro = alertas[0];\nconst linhas = alertas.map(a => `• Linha ${a.linha} (${a.parada || 'sem parada'}): ${a.percentual}% às ${a.criado_em}`);\nconst texto = `🚨 ${alertas.length} novo(s) alerta(s) crítico(s) de lotação.\\n` +\n  `Janela: últimas ${primeiro.janela_horas}h (referência: ${primeiro.referencia || 'não informada'}).\\n\\n` +\n  linhas.join('\\n') +\n  `\\n\\n⚠️ Dados sintéticos de demonstração.`;\n\nreturn [{ json: { text: texto, content: texto, alert_ids: alertas.map(a => String(a.id_alerta)) } }];"
+      }
+    },
+    {
+      "id": "n7",
       "name": "Enviar notificação",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1100,
-        -80
-      ],
+      "position": [1420, -80],
       "parameters": {
         "method": "POST",
         "url": "={{ $('Configuração').item.json.webhook_url }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ text: $json.text, content: $json.content }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ content: $json.content, text: $json.text }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "n8",
+      "name": "Registrar alertas enviados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, -80],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Este nó só executa após o HTTP Request retornar sucesso.\nconst mensagem = $('Montar mensagem').first().json;\nconst idsNovos = Array.isArray(mensagem.alert_ids) ? mensagem.alert_ids.map(String) : [];\nconst staticData = $getWorkflowStaticData('global');\nconst historico = Array.isArray(staticData.alertasCriticosEnviados) ? staticData.alertasCriticosEnviados.map(String) : [];\n\nstaticData.alertasCriticosEnviados = [...new Set([...historico, ...idsNovos])].slice(-10000);\n\nreturn [{ json: { status: 'registrado', alertas_registrados: idsNovos.length } }];"
+      }
+    },
+    {
+      "id": "note1",
+      "name": "Sobre a deduplicação",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [920, 180],
+      "parameters": {
+        "content": "## Deduplicação por ID\nO workflow compara `alertas[].id` com o histórico persistente do workflow. Os IDs só são registrados depois que o HTTP Request do Discord retorna sucesso. Se o envio falhar, o próximo ciclo poderá tentar novamente.\n\n**Importante:** o histórico está no static data do n8n. A persistência ocorre em execuções de produção com o workflow ativo; testes manuais não gravam esse histórico. O primeiro ciclo de produção desta nova versão considera os alertas atuais como novos e envia uma notificação inicial.\n\nA chave Groq permanece exclusivamente no backend (`.env.api`). `api_key` aqui é apenas para uma eventual chave interna `INFOFROTA_API_KEY` da API." ,
+        "height": 300,
+        "width": 420,
+        "color": 5
       }
     }
   ],
@@ -189,7 +212,7 @@
       "main": [
         [
           {
-            "node": "Montar mensagem",
+            "node": "Filtrar alertas ainda não enviados",
             "type": "main",
             "index": 0
           }
@@ -197,11 +220,33 @@
         []
       ]
     },
+    "Filtrar alertas ainda não enviados": {
+      "main": [
+        [
+          {
+            "node": "Montar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Montar mensagem": {
       "main": [
         [
           {
             "node": "Enviar notificação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar notificação": {
+      "main": [
+        [
+          {
+            "node": "Registrar alertas enviados",
             "type": "main",
             "index": 0
           }

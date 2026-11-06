@@ -2,165 +2,175 @@
 
 **Plataforma em desenvolvimento para inteligência operacional do transporte coletivo na Grande Vitória (Transcol).** O InfoFrota propõe reunir dados de ocupação, frota, linhas, horários e fatores externos em uma visão integrada para apoiar o planejamento e a tomada de decisão.
 
-<p align="center">
-  <a href="https://david-evora.github.io/InfoFrota/">Abrir demonstração visual (após ativar Pages)</a>
-  ·
-  <a href="docs/architecture.md">Arquitetura geral</a>
-  ·
-  <a href="docs/INFOFROTA_AI.md">Documentação do InfoFrota AI</a>
-</p>
+> **Estado do projeto — novembro de 2026:** o repositório reúne um MVP de interface web estática, uma base experimental SQLite com dados sintéticos, o módulo InfoFrota AI (Text-to-SQL com RAG de esquema), uma API FastAPI e uma integração de automação com n8n para consulta periódica de alertas e notificação via webhook (Discord/Slack). A infraestrutura de desenvolvimento pode ser executada com Docker Compose. A captação embarcada de passageiros e a operação com dados reais continuam em fase de estudo e validação.
 
-> **Estado público do projeto — 05/11/2026:** iniciativa em fase de prototipagem. Há um MVP de interface web em HTML/CSS/JavaScript, uma modelagem MySQL planejada para a plataforma operacional e um módulo experimental InfoFrota AI funcional via CLI, com avaliação Text-to-SQL e fine-tuning LoRA. A demonstração web publicada neste repositório é estática e usa exclusivamente dados ilustrativos; não está conectada a sensores, à CETURB/ES ou a um banco operacional.
+## 1. Objetivo
 
-## 1. O problema e a proposta
+O InfoFrota busca transformar registros de transporte coletivo em informações acessíveis para análise e apoio à decisão. A proposta contempla:
 
-O planejamento do transporte coletivo depende de compreender não apenas onde os ônibus estão, mas também **quantas pessoas estão utilizando cada linha, em quais horários e em quais regiões**. Informações de ocupação, quando disponíveis de forma estruturada e analisadas junto a variáveis como calendário e clima, podem apoiar decisões sobre distribuição da frota, reforço de viagens e identificação de períodos críticos.
+- acompanhamento de indicadores de ocupação por linha, veículo, região e faixa horária;
+- identificação de padrões de demanda, horários de pico e situações críticas;
+- consolidação de histórico operacional para relatórios e análises comparativas;
+- exploração de relações entre demanda, calendário e condições climáticas;
+- consultas em linguagem natural sobre a base experimental por meio do InfoFrota AI.
 
-O InfoFrota propõe uma plataforma para:
+O InfoFrota é um projeto independente em desenvolvimento. Não é um sistema oficial da CETURB/ES e não possui endosso institucional declarado.
 
-- acompanhar indicadores de ocupação por linha, veículo, região e faixa horária;
-- identificar padrões de demanda, horários de pico e possíveis situações de superlotação;
-- reunir histórico operacional para relatórios e análises comparativas;
-- explorar relações entre demanda, calendário e condições climáticas;
-- apoiar o planejamento de linhas e alocação de frota com informações consolidadas;
-- oferecer uma camada de inteligência artificial para consultar os dados em linguagem natural.
+## 2. Estado dos módulos
 
-O objetivo é transformar registros operacionais em informação acessível para análise e apoio à decisão. O InfoFrota é uma proposta independente em desenvolvimento, não um sistema oficial da CETURB/ES e não possui endosso institucional declarado.
+| Módulo | Situação |
+|---|---|
+| Captação embarcada | Conceito em estudo; hardware, posicionamento, privacidade e precisão ainda precisam ser validados |
+| Banco operacional | Modelagem MySQL desenvolvida como base de projeto; não confundir com o SQLite experimental do módulo de IA |
+| Base experimental | SQLite gerado localmente com dados sintéticos |
+| Dashboard | MVP frontend em HTML, CSS e JavaScript; demonstração estática com dados ilustrativos |
+| InfoFrota AI | Assistente Python Text-to-SQL, com RAG de esquema e avaliação experimental |
+| API | FastAPI com `/saude`, `/perguntar`, `/alertas` e `/resumo` |
+| Automação | Workflow n8n de consulta de alertas críticos e envio de notificação por webhook |
+| Integração operacional | Ainda não conectada a sensores, frota real ou sistemas da CETURB/ES |
 
-## 2. Como a solução está sendo pensada
+## 3. Arquitetura de desenvolvimento
 
-### Captação e atualização de ocupação — conceito em estudo
+```text
+n8n (Docker)
+   |
+   | HTTP interno: http://api:8000
+   v
+FastAPI (Docker) ----> SQLite experimental (somente leitura)
+   |
+   v
+Provedor LLM (Groq ou outro compatível com OpenAI API)
 
-A proposta atual considera uma pequena unidade embarcada, com câmera posicionada em ponto estratégico no interior do ônibus e processamento baseado em hardware compacto (por exemplo, ESP32, sujeito à validação de viabilidade). A lógica de contagem, posicionamento, privacidade, instalação e desempenho em condições de lotação ainda precisa ser validada em protótipo físico.
+n8n Schedule Trigger ---> GET /alertas ---> filtro/formatacao ---> Discord/Slack webhook
+```
 
-A comunicação poderá aproveitar a conectividade já disponível em parte da frota ou exigir conectividade própria. O desenho também considera armazenamento local temporário e sincronização posterior em cenários de instabilidade de internet. **Nenhum sensor ou fluxo de transmissão em operação real é disponibilizado por este repositório.**
+No `compose.yaml`, a API é exposta somente à rede Docker (`expose: 8000`), sem publicar a porta 8000 no host. O n8n acessa a API pelo nome do serviço `api`. A interface do n8n é publicada em `127.0.0.1:5678`.
 
-### Tratamento e análise
+A chave do provedor LLM deve permanecer no ambiente do backend (`.env.api`), nunca em nós ou credenciais do n8n. `INFOFROTA_API_KEY`, quando habilitada, é uma chave interna opcional para autenticar chamadas à API e é diferente da chave Groq.
 
-Os registros seriam organizados para relacionar veículo, linha, viagem, horário e local de referência. A camada analítica foi pensada para consolidar indicadores por hora, dia, linha e parada, permitindo visualizar picos, comparar períodos e cruzar os dados com calendário e clima.
+## 4. Executar com Docker Compose
 
-### Interface e apoio à decisão
+Requisitos: Docker Desktop com Docker Compose e o arquivo local `data/infofrota.db` gerado pelo projeto.
 
-O dashboard proposto reúne visão geral da operação, detalhamento por linha e veículo, alertas, histórico e relatórios. Em uma etapa posterior, a camada de IA permitirá formular perguntas em português e obter consultas aos dados, respeitando regras de segurança e acesso.
+1. Clone o repositório e entre na pasta:
 
-## 3. Módulos do projeto
+   ```bash
+   git clone https://github.com/David-Evora/InfoFrota.git
+   cd InfoFrota
+   ```
 
-| Módulo | Objetivo | Situação atual |
+2. Crie o arquivo local de ambiente:
+
+   ```powershell
+   Copy-Item .env.example .env.api
+   notepad .env.api
+   ```
+
+   Preencha a chave do provedor LLM e confira o modelo e a URL-base compatíveis com sua conta.
+
+3. Gere a base experimental se ela ainda não existir:
+
+   ```bash
+   python scripts/generate_data.py
+   ```
+
+4. Inicie os serviços:
+
+   ```bash
+   docker compose up -d --build
+   docker compose ps
+   ```
+
+5. Acesse o n8n em `http://localhost:5678`. A API permanece interna à rede Docker; de dentro do n8n, use `http://api:8000`.
+
+Para consultar logs:
+
+```bash
+docker compose logs --tail 80 api
+docker compose logs --tail 80 n8n
+```
+
+O workflow n8n está em `n8n/alerta-critico.json`. Importe-o pela opção **Import from File**, revise os valores do nó **Configuração**, teste e então ative. O webhook de notificação deve ser inserido localmente na instância; não publique URLs de webhook no Git.
+
+## 5. API
+
+A documentação interativa da API fica em `/docs` quando executada localmente. Os endpoints atuais são:
+
+| Método | Rota | Finalidade |
 |---|---|---|
-| Monitoramento de ocupação | Obter estimativas de embarque, desembarque e ocupação ao longo das viagens | Conceito e requisitos em avaliação; captura física ainda não validada |
-| Banco e camada analítica | Organizar linhas, veículos, viagens, registros, alertas e agregações | Modelagem MySQL desenvolvida como base de projeto; o schema SQLite do módulo de IA é uma adaptação experimental |
-| Dashboard operacional | Apresentar indicadores, linhas, frota, alertas e relatórios | MVP frontend em HTML, CSS e JavaScript; demonstração pública com dados ilustrativos |
-| Análises e apoio ao planejamento | Identificar horários de pico e padrões de demanda, incluindo relações com clima e calendário | Escopo analítico definido; validação operacional pendente |
-| **InfoFrota AI** | Permitir consultas aos dados em linguagem natural com Text-to-SQL | **Módulo experimental implementado via CLI; avaliação e fine-tuning LoRA realizados** |
-| Integração e automação | Integrar interface, API, recuperação de contexto e fluxos de processamento | Próxima etapa: RAG, API e orquestração com n8n |
+| GET | `/saude` | Estado do serviço e período dos dados |
+| POST | `/perguntar` | Recebe pergunta em português e retorna resultado Text-to-SQL |
+| GET | `/alertas` | Consulta alertas por tipo, janela e limite |
+| GET | `/resumo` | Retorna resumo diário por linha |
 
-## 4. InfoFrota AI: resultado experimental
+Exemplo de corpo para `POST /perguntar`:
 
-O InfoFrota AI é um módulo do projeto que investiga o uso de modelos de linguagem para converter perguntas em português em consultas SQL sobre uma base de dados controlada.
+```json
+{
+  "pergunta": "Quais linhas têm mais alertas críticos?",
+  "texto": false
+}
+```
 
-Em uma avaliação zero-shot com prompt compacto e 56 perguntas (benchmark v2.1), o Llama 3.1 8B Instruct apresentou os seguintes resultados:
+A rota `/perguntar` exige pergunta entre 3 e 500 caracteres. `texto` é opcional e, quando verdadeiro, solicita também uma resposta em linguagem natural.
 
-| Modelo | Acertos | Acurácia principal | Correspondência exata |
-|---|---:|---:|---:|
-| Llama 3.1 8B Instruct (base) | 19/56 | 33,9% | 30,4% |
-| Llama 3.1 8B Instruct + LoRA | 36/56 | **64,3%** | **58,9%** |
-| Llama 3.1 8B Instruct + RAG de esquema | 25/56 | 44,6% | 41,1% |
-| Llama 3.1 8B Instruct + LoRA + RAG de esquema | 36/56 | 64,3% | 57,1% |
-| Prompt `ultra`: base | 19/56 | 33,9% | 30,4% |
-| Prompt `ultra`: base + RAG | 28/56 | 50,0% | 46,4% |
-| Prompt `ultra`: LoRA treinado com contexto, sem RAG na avaliação | 33/56 | 58,9% | 55,4% |
-| Prompt `ultra`: LoRA treinado com contexto + RAG | **39/56** | **69,6%** | **66,1%** |
+## 6. InfoFrota AI, RAG e avaliação
 
-O resultado com LoRA representa ganho de **30,4 pontos percentuais** na métrica principal, nas mesmas condições de avaliação. O RAG de esquema elevou o modelo base em 10,7 pontos (19 para 25 acertos), mas não alterou o total do modelo com LoRA (36 em ambos): o adaptador foi treinado sem o contexto recuperado e não o aproveita de forma consistente. O conjunto v2.1 é separado dos dados de fine-tuning; os relatórios documentam limitações e casos conhecidos do teste. A comparação é experimental e restrita ao banco e às perguntas controladas, não representa desempenho em produção ou sobre dados reais de transporte.
+O módulo recebe perguntas em português, recupera contexto do esquema SQLite e das regras do domínio, solicita SQL ao provedor LLM, valida a consulta e executa leitura no banco experimental. A proteção inclui execução SQLite em modo somente leitura, authorizer, limite de linhas e timeout.
 
-Detalhes de instalação, execução, avaliação, treinamento e limitações estão em [`docs/INFOFROTA_AI.md`](docs/INFOFROTA_AI.md), [`docs/experiments.md`](docs/experiments.md) e [`training/REPORT.md`](training/REPORT.md).
+O RAG de esquema recupera tabelas/views, valores categóricos e regras relevantes. O benchmark congelado e os relatórios experimentais ficam em `evaluation/`; não use perguntas de avaliação como fonte de recuperação ou treinamento, para evitar vazamento.
 
-## 5. Tecnologias e ferramentas
+Os resultados de avaliação são experimentais e restritos à base e às perguntas controladas. Não representam desempenho em produção ou sobre dados reais de transporte.
 
-- **Frontend:** HTML5, CSS3 e JavaScript (Vanilla JS) para o MVP de interface.
-- **Banco de dados:** MySQL na modelagem da plataforma operacional; SQLite no ambiente experimental do InfoFrota AI.
-- **IA e dados:** Python, Llama 3.1 8B Instruct, Hugging Face, PEFT, QLoRA/LoRA e SQL.
-- **Treinamento e avaliação:** Kaggle, scripts de geração de datasets e benchmark Text-to-SQL.
-- **Integração planejada:** API, RAG e n8n.
+Consulte:
+- [`docs/INFOFROTA_AI.md`](docs/INFOFROTA_AI.md)
+- [`docs/architecture-infofrota-ai.md`](docs/architecture-infofrota-ai.md)
+- [`docs/experiments.md`](docs/experiments.md)
+- [`training/REPORT.md`](training/REPORT.md)
 
-## 6. Indicadores e impacto esperado
+## 7. Dados e limitações
 
-Uma estimativa preliminar da equipe apontou potencial de aproximadamente **7% de redução em custos associados à alocação de frota/combustível**, baseada em uma hipótese de melhor aproveitamento de rotas em sete linhas. Esse número **não é resultado medido, não foi validado em operação e não deve ser interpretado como economia alcançada**. A validação depende de dados reais, metodologia comparativa e avaliação com o operador.
+O banco `data/infofrota.db` é gerado localmente e não deve ser versionado. Frota, viagens, leituras de ocupação, clima e alertas são dados sintéticos.
 
-## 7. Contexto de desenvolvimento
+O arquivo `data/linhas_ceturbes.csv` contém rótulos de linhas provenientes do conjunto público [Rótulos das Linhas](https://dados.es.gov.br/dataset/rotulos-das-linhas), cuja licença indicada para esse conjunto específico é CC0. Essa licença não deve ser confundida com a licença do código do projeto.
 
-O InfoFrota é desenvolvido colaborativamente por uma equipe de quatro integrantes; David Évora atua como vice-líder técnico. O projeto foi apresentado em evento de inovação e houve contato inicial com o Núcleo de Inteligência e Análise de Dados (NIAD) da CETURB/ES, que solicitou informações sobre a obtenção, o tratamento e o uso dos dados para avaliar o possível encaminhamento interno. Esse contato não significa aprovação, contratação, parceria formal ou implantação.
+Não adicione dados pessoais, imagens de passageiros, credenciais ou dados operacionais sem autorização. A proposta de câmera embarcada ainda exige avaliação técnica, de privacidade, retenção e base legal antes de qualquer teste com passageiros.
 
-## 8. Demonstração visual
+## 8. Segurança
 
-A página estática em [`docs/index.html`](docs/index.html) permite navegar por uma representação inicial do dashboard: visão geral, linhas, frota, relatórios e assistente de IA. Os valores, alertas, veículos, curvas e posições exibidos são **fictícios e ilustrativos**. Os controles servem para demonstrar a experiência de navegação; não consultam serviços externos nem executam SQL.
+- Não versione `.env.api`, tokens, chaves, arquivos `.pem` ou `.key`.
+- Mantenha a chave do provedor LLM exclusivamente no backend.
+- Não publique a porta da API sem uma necessidade arquitetural e controles apropriados.
+- Se habilitar `INFOFROTA_API_KEY`, configure a mesma chave interna no cliente autorizado; não reutilize a chave Groq.
+- Faça backup do volume `n8n_data` e dos dados locais relevantes.
+- A configuração atual é de desenvolvimento; antes de produção, revise autenticação, autorização, TLS, atualização de imagens, logs, retenção, backups e exposição de rede.
 
-Para visualizar localmente, basta abrir `docs/index.html` no navegador. Para publicar com GitHub Pages:
-
-1. Abra **Settings → Pages** no repositório.
-2. Em **Build and deployment**, selecione **Deploy from a branch**.
-3. Escolha a branch `main` e a pasta `/docs`.
-4. Salve. Após a publicação, o endereço esperado é `https://david-evora.github.io/InfoFrota/`.
-
-## 9. Próximas etapas
-
-1. Validar tecnicamente a solução de captação de ocupação e os requisitos de instalação, privacidade e conectividade.
-2. Consolidar o dicionário de dados e documentar a relação entre a modelagem MySQL da plataforma e a base SQLite experimental.
-3. Evoluir o dashboard e conectar a interface a uma API real, com autenticação e controle de acesso.
-4. Implementar RAG para recuperar esquema, relacionamentos e valores categóricos relevantes para o Text-to-SQL.
-5. Integrar os componentes e fluxos de processamento com n8n, avaliando latência, segurança e observabilidade.
-6. Comparar os resultados do assistente sem RAG e com RAG usando o benchmark congelado e avaliações adicionais sem vazamento.
-7. Validar indicadores e hipóteses de impacto com dados autorizados e metodologia acordada com o operador.
-
-## 10. Estrutura do repositório
+## 9. Estrutura do repositório
 
 ```text
 InfoFrota/
-├── README.md                   # visão geral da plataforma
-├── docs/
-│   ├── index.html              # demonstração web estática (GitHub Pages)
-│   ├── assets/                 # CSS e JavaScript da demonstração
-│   ├── architecture.md         # arquitetura geral
-│   ├── architecture-infofrota-ai.md
-│   ├── INFOFROTA_AI.md         # documentação do módulo de IA
-│   └── experiments.md          # avaliação LoRA
-├── infofrota_ai/               # código Python do módulo Text-to-SQL
-├── db/                         # schema SQLite experimental
-├── scripts/                    # geração de dados e datasets
-├── evaluation/                 # benchmark e relatórios
-├── training/                  # datasets e relatório do LoRA
-├── kaggle/                    # script e instruções de treinamento
-└── tests/                      # testes automatizados
+├── LICENSE
+├── README.md
+├── .env.example
+├── Dockerfile.api
+├── compose.yaml
+├── data/                  # CSV público e banco SQLite local ignorado
+├── db/                    # schema SQLite experimental
+├── docs/                  # arquitetura, experimentos e documentação
+├── evaluation/            # benchmark e relatórios
+├── infofrota_ai/          # assistente, RAG, API e provedores
+├── n8n/                   # workflows e instruções de importação
+├── scripts/               # geração de dados e datasets
+├── tests/                 # testes automatizados
+└── training/              # datasets e relatório de fine-tuning
 ```
 
-## 11. Dados do projeto
+## 10. Licença
 
-## Rótulos das linhas
+O código e a documentação originais deste repositório são disponibilizados sob a licença MIT. Consulte [`LICENSE`](LICENSE).
 
-O arquivo `linhas_ceturbes.csv` é utilizado por `scripts/generate_data.py` para carregar os identificadores e rótulos oficiais das linhas.
+A licença MIT não substitui licenças ou termos aplicáveis a materiais de terceiros distribuídos no repositório. Em particular, o conjunto de rótulos das linhas indicado como CC0 mantém sua identificação própria. Modelos, pesos, adaptadores, bibliotecas, serviços externos e conjuntos de dados podem possuir termos independentes.
 
-- **Conjunto:** [Rótulos das Linhas](https://dados.es.gov.br/dataset/rotulos-das-linhas)
-- **Órgão responsável:** CETURB — Companhia Estadual de Transportes Coletivos de Passageiros do Estado do Espírito Santo
-- **Portal:** Dados Abertos do Espírito Santo
-- **Licença:** CC0
-- **Colunas utilizadas:** `Linha` e `Rotulo`
+## 11. Situação institucional
 
-O arquivo é distribuído neste repositório por se tratar desse conjunto público específico. A licença e a autorização devem ser verificadas individualmente para quaisquer outros dados adicionados.
-
-## Dados gerados localmente
-
-O script gera `data/infofrota.db`, um banco SQLite com frota, viagens, paradas, leituras de ocupação, clima e alertas sintéticos.
-
-Para recriá-lo:
-
-```bash
-python scripts/generate_data.py
-```
-
-O banco gerado permanece ignorado pelo Git.
-
-Não adicione dados pessoais, imagens de passageiros, credenciais ou dados operacionais não autorizados.
-
-## Licença
-
-Nenhuma licença foi definida até o momento. A visualização pública do código não concede automaticamente permissão para reutilização, modificação ou redistribuição. Uma licença deverá ser escolhida antes de abrir contribuições ou autorizar reutilização por terceiros.
+O InfoFrota é uma iniciativa independente de prototipagem e pesquisa. Contatos, apresentações ou envio de documentos a órgãos públicos não significam aprovação, contratação, parceria formal, implantação ou endosso institucional.
