@@ -20,6 +20,7 @@ from .db import DB_PATH
 from .fakes import EscritaLLM, NaiveLLM, OracleLLM
 from .llm import CachedLLM, llm_do_ambiente
 from .prompts import MODOS, PROMPT_VERSAO
+from infofrota_ai import llm
 
 ROOT = Path(__file__).resolve().parent.parent
 QUESTOES = ROOT / "evaluation" / "questions.json"
@@ -150,7 +151,8 @@ def main():
     print(md)
     if not a.sem_relatorio and a.provider not in ("oracle", "naive", "escrita"):
         RUNS.mkdir(parents=True, exist_ok=True)
-        base = RUNS / f"{datetime.now():%Y%m%d-%H%M%S}_{llm.nome}_{a.shots}shot_{a.prompt}{"_rag" if a.rag else ""}"
+        rag_suffix = "_rag" if a.rag else ""
+        base = RUNS / f"{datetime.now():%Y%m%d-%H%M%S}_{llm.nome}_{a.shots}shot_{a.prompt}{rag_suffix}"
         Path(f"{base}.json").write_text(json.dumps(
             {"modelo": llm.nome, "shots": a.shots, "versao_perguntas": versao_avaliacao(),
              "versao_prompt": PROMPT_VERSAO, "prompt_modo": a.prompt, "rag": a.rag, "resumo": resumo, "resultados": resultados},
