@@ -95,10 +95,16 @@ REGRAS
 {FORMATO_RESPOSTA}"""
 
 
-def montar_system(db_path=DB_PATH, compacto=False) -> str:
-    """compacto: False (DDL completo), True (tabela(colunas) + glossário) ou "ultra"."""
-    if compacto == "ultra":
-        return _system_ultra(db_path)
+def montar_system(db_path=DB_PATH, compacto=False, contexto: str = "") -> str:
+    """compacto: False (DDL completo), True (tabela(colunas) + glossário) ou "ultra".
+    contexto: bloco recuperado pelo RAG, inserido antes do formato de resposta."""
+    texto = _system_ultra(db_path) if compacto == "ultra" else _system_base(db_path, compacto)
+    if contexto:
+        texto = texto.replace(FORMATO_RESPOSTA, f"{contexto}\n\n{FORMATO_RESPOSTA}")
+    return texto
+
+
+def _system_base(db_path, compacto) -> str:
     ini, fim, n_monit = _periodo(db_path)
     esquema = (f"ESQUEMA (tabela(colunas))\n{_esquema_compacto(db_path)}" if compacto
                else f"ESQUEMA\n{_ddl(db_path)}")

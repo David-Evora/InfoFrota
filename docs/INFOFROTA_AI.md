@@ -179,3 +179,17 @@ infofrota-ai/
 ## Licença
 
 Nenhuma licença de código foi definida até o momento. A publicação do repositório permite consultar o conteúdo, mas não concede automaticamente permissões de reutilização ou redistribuição. Defina uma licença antes de convidar terceiros a reutilizar o projeto.
+
+
+## RAG de esquema (`infofrota_ai/rag.py`)
+
+O índice é montado a partir do próprio banco: tabelas e views (colunas, descrição, chaves), valores categóricos válidos (por exemplo `onibus.status`, `alertas.precaucao_descricao`) e regras do domínio. Para cada pergunta, o BM25 recupera 4 tabelas, 5 grupos de valores e 3 regras, que entram no prompt como `CONTEXTO RECUPERADO`. O índice **não usa** `evaluation/questions.json`.
+
+```bash
+python -m infofrota_ai "Quais ônibus estão em manutenção?" --rag --prompt compacto
+python -m infofrota_ai.rag "Quais ônibus estão em manutenção?"   # mostra só o contexto
+python -m infofrota_ai.rag --recall                              # cobertura sobre as perguntas de teste
+python -m infofrota_ai.evaluate --provider hf --model BASE::ADAPTADOR --prompt compacto --shots 0 --rag
+```
+
+Cobertura medida uma vez nas 51 perguntas respondíveis do benchmark v2.1 (só mede; não foi usada para ajustar o índice): o contexto traz 67% (63/94) das tabelas e views usadas no SQL de referência e 88% (23/26) dos valores literais categóricos. O prompt compacto já lista todas as tabelas, então o ganho esperado está nos valores válidos e nas regras. Se o RAG melhora ou não a acurácia é medido na avaliação ponta a ponta, não por esta cobertura.

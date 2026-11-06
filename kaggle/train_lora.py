@@ -34,7 +34,8 @@ if not os.path.exists(CSV_LOCAL):
 
 subprocess.run([sys.executable, "scripts/generate_data.py"], check=True)      # gera o banco
 BASE = "unsloth/Llama-3.1-8B-Instruct"   # mesmos pesos do Llama-3.1-8B-Instruct, sem exigir token
-OUT = "/kaggle/working/lora"
+OUT = os.environ.get("OUT_LORA", "/kaggle/working/lora")
+TREINO = os.environ.get("TREINO", "training")   # training_rag = dados com contexto recuperado
 
 # %% 3. tokenização (perda só na resposta do assistente)
 import os; os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -59,7 +60,7 @@ def carregar(arq):
                     "labels": ([-100] * len(p) + r)[:MAXLEN]})
     return Dataset.from_list(out)
 
-tr, va = carregar("training/train_chat.jsonl"), carregar("training/val_chat.jsonl")
+tr, va = carregar(f"{TREINO}/train_chat.jsonl"), carregar(f"{TREINO}/val_chat.jsonl")
 print(len(tr), len(va), "tokens máx:", max(len(x["input_ids"]) for x in tr))
 
 # %% 4. modelo 4 bits + LoRA

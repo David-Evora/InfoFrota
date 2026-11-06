@@ -893,7 +893,7 @@ def relatorio(itens, descartes, args, n_train, n_val):
     proximos = sorted(itens, key=lambda i: -i["similaridade_max_teste"])[:8]
     sims = [i["similaridade_max_teste"] for i in itens]
     L = [f"# Conjunto de treino do LoRA\n",
-         f"Modo: **{'COM' if args.incluir_proximas else 'SEM'} famílias próximas do teste** · prompt `{args.prompt}` · semente {args.seed}\n",
+         f"Modo: **{'COM' if args.incluir_proximas else 'SEM'} famílias próximas do teste** · prompt `{args.prompt}`{' + RAG' if args.rag else ''} · semente {args.seed}\n",
          f"Total: **{len(itens)}** exemplos (treino {n_train}, validação {n_val}) · "
          f"recusas: {sum(1 for i in itens if not i['pode_responder'])} "
          f"({sum(1 for i in itens if not i['pode_responder']) / len(itens):.0%})\n",
@@ -920,7 +920,12 @@ def relatorio(itens, descartes, args, n_train, n_val):
 
 def exportar(itens, args):
     OUT.mkdir(exist_ok=True)
-    system = prompts.montar_system(args.db, compacto=prompts.MODOS[args.prompt])
+    modo = prompts.MODOS[args.prompt]
+    system = prompts.montar_system(args.db, compacto=modo)
+    indice = None
+    if args.rag:   # o contexto de cada exemplo é recuperado da pergunta dele, como na inferência
+        from infofrota_ai.rag import Indice
+        indice = Indice(args.db)
     n_val = max(1, round(len(itens) * args.val))
     val, train = itens[:n_val], itens[n_val:]
     (OUT / "dataset.jsonl").write_text(
@@ -930,7 +935,8 @@ def exportar(itens, args):
         for i in parte:
             resp = {"pode_responder": i["pode_responder"], "sql": i["sql"], "motivo": i["motivo"]}
             linhas.append(json.dumps({"messages": [
-                {"role": "system", "content": system},
+                {"role": "system", "content": system if not indice else prompts.montar_system(
+                    args.db, compacto=modo, contexto=indice.contexto(i["pergunta"]))},
                 {"role": "user", "content": i["pergunta"]},
                 {"role": "assistant", "content": json.dumps(resp, ensure_ascii=False)}]}, ensure_ascii=False))
         (OUT / nome).write_text("\n".join(linhas) + "\n", encoding="utf-8")
@@ -946,7 +952,11 @@ def main():
     ap.add_argument("--incluir-proximas", action="store_true")
     ap.add_argument("--limiar-similaridade", type=float, default=0.8)
     ap.add_argument("--val", type=float, default=0.08)
+    ap.add_argument("--rag", action="store_true", help="inclui o contexto recuperado (RAG de esquema) no system de cada exemplo")
+    ap.add_argument("--saida", default="training", help="pasta de saída dentro do repo")
     args = ap.parse_args()
+    global OUT
+    OUT = ROOT / args.saida
     itens, descartes, _ = montar(args)
     args.descartes = descartes
     n_train, n_val = exportar(itens, args)

@@ -48,3 +48,19 @@ class TreinoTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TreinoRagTest(unittest.TestCase):
+    def test_system_com_contexto_por_exemplo(self):
+        arq = ROOT / "training_rag" / "train_chat.jsonl"
+        self.assertTrue(arq.exists(), "gere com: python scripts/build_train_set.py --prompt ultra --rag --saida training_rag")
+        perg = [q["pergunta"] for q in TESTE]
+        systems = set()
+        for l in arq.read_text(encoding="utf-8").splitlines():
+            m = json.loads(l)["messages"]
+            self.assertIn("CONTEXTO RECUPERADO", m[0]["content"])
+            self.assertTrue(m[0]["content"].startswith(prompts.montar_system(DB_PATH, compacto="ultra")[:200]))
+            systems.add(m[0]["content"])
+            for p in perg:
+                self.assertNotIn(p, m[0]["content"])
+        self.assertGreater(len(systems), 50)   # o contexto varia com a pergunta

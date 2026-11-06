@@ -104,11 +104,11 @@ def relatorio_md(modelo, shots, resumo, resultados, modo="completo"):
 
 
 def executar_avaliacao(llm, shots=3, apenas=None, db_path=DB_PATH, questoes_path=QUESTOES,
-                       compacto=False):
+                       compacto=False, rag=False):
     questoes = json.loads(Path(questoes_path).read_text(encoding="utf-8"))
     if apenas:
         questoes = [q for q in questoes if q["id"] in apenas]
-    assistente = Assistente(llm, db_path=db_path, shots=shots, compacto=compacto)
+    assistente = Assistente(llm, db_path=db_path, shots=shots, compacto=compacto, rag=rag)
     resultados = []
     for q in questoes:
         t0 = time.monotonic()
@@ -127,6 +127,7 @@ def main():
     ap.add_argument("--only", default=None, help="ids separados por vírgula")
     ap.add_argument("--prompt", choices=list(MODOS), default="completo",
                     help="compacto = só nomes de colunas + glossário; ultra = esquema + 5 regras (LoRA)")
+    ap.add_argument("--rag", action="store_true", help="adiciona o contexto recuperado (RAG de esquema) ao prompt")
     ap.add_argument("--no-cache", action="store_true")
     ap.add_argument("--sem-relatorio", action="store_true")
     a = ap.parse_args()
@@ -144,17 +145,17 @@ def main():
             llm = CachedLLM(llm)
 
     apenas = set(a.only.split(",")) if a.only else None
-    resultados, resumo = executar_avaliacao(llm, a.shots, apenas, compacto=MODOS[a.prompt])
-    md = relatorio_md(llm.nome, a.shots, resumo, resultados, a.prompt)
+    resultados, resumo = executar_avaliacao(llm, a.shots, apenas, compacto=MODOS[a.prompt], rag=a.rag)
+    md = relatorio_md(llm.nome, a.shots, resumo, resultados, a.prompt + ("+rag" if a.rag else ""))
     print(md)
     if not a.sem_relatorio and a.provider not in ("oracle", "naive", "escrita"):
         RUNS.mkdir(parents=True, exist_ok=True)
-        base = RUNS / f"{datetime.now():%Y%m%d-%H%M%S}_{llm.nome}_{a.shots}shot_{a.prompt}"
-        base.with_suffix(".json").write_text(json.dumps(
+        base = RUNS / f"{datetime.now():%Y%m%d-%H%M%S}_{llm.nome}_{a.shots}shot_{a.prompt}{"_rag" if a.rag else ""}"
+        Path(f"{base}.json").write_text(json.dumps(
             {"modelo": llm.nome, "shots": a.shots, "versao_perguntas": versao_avaliacao(),
-             "versao_prompt": PROMPT_VERSAO, "prompt_modo": a.prompt, "resumo": resumo, "resultados": resultados},
+             "versao_prompt": PROMPT_VERSAO, "prompt_modo": a.prompt, "rag": a.rag, "resumo": resumo, "resultados": resultados},
             ensure_ascii=False, indent=1), encoding="utf-8")
-        base.with_suffix(".md").write_text(md, encoding="utf-8")
+        Path(f"{base}.md").write_text(md, encoding="utf-8")
         print(f"\nRelatório salvo em {base}.md")
 
 

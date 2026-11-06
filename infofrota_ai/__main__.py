@@ -48,10 +48,11 @@ def main():
     ap.add_argument("--base-url")
     ap.add_argument("--sql", action="store_true", help="mostrar só o SQL e o resultado bruto")
     ap.add_argument("--prompt", choices=list(prompts.MODOS), default="completo")
+    ap.add_argument("--rag", action="store_true", help="contexto recuperado (RAG de esquema)")
     ap.add_argument("--shots", type=int, default=3, choices=[0, 1, 2, 3])
     a = ap.parse_args()
     bot = Assistente(llm_do_ambiente(a.provider, a.model, a.base_url), shots=a.shots,
-                     compacto=prompts.MODOS[a.prompt])
+                     compacto=prompts.MODOS[a.prompt], rag=a.rag)
 
     if a.pergunta:
         mostrar(bot.perguntar(" ".join(a.pergunta), responder_em_texto=not a.sql), a.sql)

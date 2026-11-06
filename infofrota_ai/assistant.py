@@ -53,18 +53,24 @@ class Resposta:
 
 
 class Assistente:
-    def __init__(self, llm, db_path=DB_PATH, shots=3, max_reparos=1, max_linhas=200, compacto=False):
+    def __init__(self, llm, db_path=DB_PATH, shots=3, max_reparos=1, max_linhas=200, compacto=False, rag=False):
         self.llm, self.db_path = llm, db_path
         self.shots, self.max_reparos, self.max_linhas = shots, max_reparos, max_linhas
-        self.system = prompts.montar_system(db_path, compacto)
+        self.compacto, self.system = compacto, prompts.montar_system(db_path, compacto)
+        self.indice = None
+        if rag:
+            from .rag import Indice
+            self.indice = Indice(db_path)
 
     def perguntar(self, pergunta: str, responder_em_texto: bool = True) -> Resposta:
         r = Resposta(pergunta=pergunta)
         msgs = prompts.mensagens_exemplo(self.shots) + [{"role": "user", "content": pergunta}]
+        system = self.system if not self.indice else prompts.montar_system(
+            self.db_path, self.compacto, self.indice.contexto(pergunta))
 
         for tentativa in range(self.max_reparos + 1):
             r.tentativas = tentativa + 1
-            bruto = self.llm.complete(self.system, msgs)
+            bruto = self.llm.complete(system, msgs)
             try:
                 dados = interpretar(bruto)
             except RespostaInvalida as e:
