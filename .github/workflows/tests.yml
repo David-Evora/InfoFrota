@@ -24,7 +24,7 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependências
-        run: 
+        run: |
           pip install -r requirements-api.txt
           python -m pip install --upgrade pip
 
