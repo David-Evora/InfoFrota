@@ -1,20 +1,18 @@
 # Treino LoRA no Kaggle (GPU)
 
-O repositório público não inclui o CSV de linhas, o banco SQLite nem os pesos do adaptador. Para executar o treino, use dois inputs no Kaggle:
+## Preparação dos dados
 
-1. **Código:** compacte a pasta `infofrota-ai` sem `.git`, `.venv`, `data/*.db`, `data/linhas_ceturbes.csv` e arquivos de modelo; envie como Dataset do Kaggle. O pacote já contém `training/`, `kaggle/` e os scripts.
-2. **Dados locais:** crie um segundo Dataset (preferencialmente privado) contendo o arquivo `linhas_ceturbes.csv`, desde que você tenha autorização para utilizá-lo. Não publique esse CSV sem verificar os termos da fonte.
+O arquivo `data/linhas_ceturbes.csv` já está incluído no repositório.
 
-No Kaggle:
+Ao criar o Dataset para o Kaggle, inclua esse arquivo junto com
+o código do projeto. Não é necessário adicionar um segundo Dataset
+exclusivamente para os rótulos das linhas.
 
-1. Crie um Notebook e adicione os dois Datasets em **Add Input**.
-2. Em Settings, escolha **GPU T4 x2** e habilite **Internet**.
-3. Cole `kaggle/train_lora.py` em células (cada `# %%` marca uma seção).
-4. Execute as células em ordem. O script copia o CSV do segundo input para `data/` apenas no ambiente temporário e gera o banco.
-5. Ao final, baixe `lora_adapter.zip` e os relatórios da aba Output.
-
-O adaptador e os checkpoints não devem ser enviados ao repositório de código.
-
+Não inclua:
+- A pasta `.git`
+- Ambientes virtuais (`.venv`)
+- Banco SQLite gerado (`data/*.db`)
+- Pesos e checkpoints de modelos
 ## Avaliar com RAG (sem retreinar)
 Depois de aplicar este patch no repo e subir o dataset de novo, rode as 4 combinações no mesmo prompt (`--prompt compacto --shots 0`):
 1. base · 2. base `--rag` · 3. base+LoRA (`BASE::/kaggle/working/lora`) · 4. base+LoRA `--rag`.

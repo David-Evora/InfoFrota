@@ -58,7 +58,19 @@ A arquitetura e os componentes planejados estão descritos em [`docs/architectur
 
 O banco usado nos experimentos é **majoritariamente sintético**. Frota, viagens, leituras de ocupação, alertas e clima são gerados pelo script `scripts/generate_data.py`, com semente fixa. Esses valores não representam a operação real dos ônibus.
 
-O gerador também utiliza um CSV de linhas e rótulos de transporte (`data/linhas_ceturbes.csv`). Esse arquivo **não é distribuído neste repositório**. Para gerar o banco, obtenha uma cópia que você tenha autorização para usar e coloque-a localmente em `data/linhas_ceturbes.csv`, com as colunas `Linha` e `Rotulo`. Consulte [`data/README.md`](../data/README.md). O arquivo local está no `.gitignore` para evitar publicação inadvertida.
+O banco utiliza o arquivo `data/linhas_ceturbes.csv`, incluído neste
+repositório, com identificadores e rótulos das linhas de transporte.
+
+O arquivo é proveniente do conjunto público [Rótulos das Linhas](https://dados.es.gov.br/dataset/rotulos-das-linhas),
+disponibilizado no portal Dados Abertos do Espírito Santo pela CETURB-ES.
+A licença indicada para esse conjunto específico é CC0.
+
+O gerador utiliza as colunas `Linha` e `Rotulo`.
+Consulte [`data/README.md`](../data/README.md) para informações sobre
+a origem e o uso dos dados.
+
+Os demais dados de operação, incluindo frota, viagens, ocupação,
+clima e alertas, são sintéticos.
 
 As coordenadas de algumas paradas do protótipo são aproximadas; os itinerários e dados de operação simulados não devem ser interpretados como trajetos ou indicadores oficiais.
 

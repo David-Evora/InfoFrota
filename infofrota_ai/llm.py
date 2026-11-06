@@ -55,12 +55,15 @@ class OpenAICompatLLM:
             "messages": [{"role": "system", "content": system}] + messages,
         }).encode()
         req = urllib.request.Request(f"{self.base_url}/chat/completions", data=corpo, headers={
-            "Content-Type": "application/json",
+            "Content-Type": "application/json","User-Agent": "infofrota-ai/1.0",
             **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {})})
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as r:
                 dados = json.load(r)
             return dados["choices"][0]["message"]["content"] or ""
+        except urllib.error.HTTPError as e:
+            detalhe = e.read().decode("utf-8", "replace")[:300]
+            raise LLMErro(f"falha ao chamar {self.base_url}: HTTP {e.code} {detalhe}") from e
         except (urllib.error.URLError, KeyError, IndexError, json.JSONDecodeError) as e:
             raise LLMErro(f"falha ao chamar {self.base_url}: {e}") from e
 
