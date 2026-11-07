@@ -14,6 +14,10 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 # Copia o código Python
 COPY infofrota_ai/ ./infofrota_ai/
 
+# Interface web, servida pela própria API em "/"
+COPY docs/index.html ./docs/index.html
+COPY docs/assets/ ./docs/assets/
+
 EXPOSE 8000
 
 # Inicia o FastAPI

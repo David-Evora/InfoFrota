@@ -2,7 +2,7 @@
 
 **Assistente experimental de Text-to-SQL para exploração de dados de transporte coletivo.** O módulo recebe perguntas em português, recupera contexto do esquema e das regras do domínio, gera consultas SQL com um modelo de linguagem, valida a consulta e executa leitura em SQLite.
 
-> **Estado — novembro de 2026:** núcleo Text-to-SQL, CLI, RAG de esquema e API FastAPI implementados. A API possui rotas para saúde, perguntas, alertas e resumo. A infraestrutura de desenvolvimento inclui Docker Compose e um workflow n8n para consulta periódica de alertas e notificação por webhook. O dashboard continua sendo uma demonstração estática; não está integrado à API. A captação embarcada e a operação com dados reais não estão implementadas.
+> **Estado — novembro de 2026:** núcleo Text-to-SQL, CLI, RAG de esquema e API FastAPI implementados. A API possui rotas para saúde, perguntas, alertas e resumo. A infraestrutura de desenvolvimento inclui Docker Compose e um workflow n8n para consulta periódica de alertas e notificação por webhook. A interface (`docs/index.html`) é servida pela API em `/`: com a API ativa, os indicadores, a tabela de linhas, os alertas e o assistente usam dados reais do banco sintético; sem ela (GitHub Pages, arquivo aberto direto), continua uma demonstração estática com dados fictícios. A captação embarcada e a operação com dados reais não estão implementadas.
 
 ## 1. Componentes implementados
 
@@ -103,7 +103,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-O n8n fica em `http://localhost:5678`. A API é acessada internamente pelo n8n em `http://api:8000`; a porta 8000 não é publicada no host na configuração Compose atual.
+O n8n fica em `http://localhost:5678`. A API é acessada internamente pelo n8n em `http://api:8000`; a porta 8000 é publicada só no loopback do host (`127.0.0.1:8000`) para a interface web.
 
 O workflow de alertas fica em `n8n/alerta-critico.json`. Importe pelo n8n, configure localmente a URL do webhook no nó **Configuração**, teste e ative. Não versione URLs reais de webhook.
 

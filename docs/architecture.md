@@ -31,7 +31,7 @@ Este documento separa a arquitetura de desenvolvimento já executável dos compo
 n8n ── webhook HTTP ──> Discord ou Slack
 ```
 
-A API é acessível pelo n8n na rede interna Docker. A configuração atual não publica a porta 8000 no host. A interface do n8n é publicada localmente em `127.0.0.1:5678`.
+A API é acessível pelo n8n na rede interna Docker. A porta 8000 é publicada apenas no loopback do host (`127.0.0.1:8000`), onde a API serve a interface web. A interface do n8n é publicada localmente em `127.0.0.1:5678`.
 
 ## 2. Componentes e situação
 

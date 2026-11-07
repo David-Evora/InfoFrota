@@ -16,7 +16,9 @@ Configuração por variáveis de ambiente
   INFOFROTA_CORS             origens permitidas, separadas por vírgula (para a interface web)
   INFOFROTA_LIMITE_POR_MIN   pedidos a /perguntar por minuto por IP (30)
   INFOFROTA_DB               caminho do banco SQLite
+  INFOFROTA_WEB              pasta da interface web servida em "/" (padrão: docs/; "0" desliga)
 
+A interface (docs/index.html) é servida pela própria API, na mesma origem: sem CORS e sem chave no navegador.
 O modelo só é carregado no primeiro /perguntar; /saude, /alertas e /resumo funcionam sem ele.
 Os dados são sintéticos; o "agora" dos alertas é o momento do último alerta do banco.
 """
@@ -27,10 +29,12 @@ import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import asdict
+from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import prompts
@@ -132,14 +136,15 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None) -> FastAPI
         return {"referencia": ref, "janela_horas": janela_horas, "total": total, "alertas": lista}
 
     @app.get("/resumo", dependencies=[Depends(autenticar)])
-    def resumo(data: Optional[str] = Query(None, description="AAAA-MM-DD; padrão: último dia do banco")):
+    def resumo(data: Optional[str] = Query(None, description="AAAA-MM-DD; padrão: último dia do banco"),
+               limite: int = Query(5, ge=1, le=50, description="Quantas linhas devolver, da mais cheia para a menos cheia")):
         if data and not DATA_RE.match(data):
             raise HTTPException(422, "data deve ser AAAA-MM-DD")
         con = conectar(db_path)
         try:
             dia = data or con.execute("SELECT MAX(data) FROM resumos_dia").fetchone()[0]
             linhas = _linhas(con, """
-                SELECT l.numero AS linha, ROUND(d.media_percentual, 1) AS media_percentual,
+                SELECT l.numero AS linha, l.nome AS linha_nome, l.tipo, ROUND(d.media_percentual, 1) AS media_percentual,
                        ROUND(d.max_percentual, 1) AS max_percentual, d.hora_pico,
                        d.total_alertas_atencao, d.total_alertas_critico
                 FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id
@@ -148,9 +153,16 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None) -> FastAPI
             con.close()
         if not linhas:
             raise HTTPException(404, f"sem dados para {dia}")
-        return {"data": dia, "linhas": linhas[:5], "total_linhas": len(linhas),
+        return {"data": dia, "linhas": linhas[:limite], "total_linhas": len(linhas),
                 "totais": {"atencao": sum(r["total_alertas_atencao"] or 0 for r in linhas),
                            "critico": sum(r["total_alertas_critico"] or 0 for r in linhas)}}
+
+    # Interface web na mesma origem. Registrada por último: as rotas acima têm prioridade.
+    web = os.environ.get("INFOFROTA_WEB", "")
+    if web != "0":
+        pasta = Path(web) if web else Path(__file__).resolve().parent.parent / "docs"
+        if (pasta / "index.html").is_file():
+            app.mount("/", StaticFiles(directory=pasta, html=True), name="web")
 
     return app
 

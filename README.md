@@ -23,7 +23,7 @@ O InfoFrota é um projeto independente em desenvolvimento. Não é um sistema of
 | Captação embarcada | Conceito em estudo; hardware, posicionamento, privacidade e precisão ainda precisam ser validados |
 | Banco operacional | Modelagem MySQL desenvolvida como base de projeto; não confundir com o SQLite experimental do módulo de IA |
 | Base experimental | SQLite gerado localmente com dados sintéticos |
-| Dashboard | MVP frontend em HTML, CSS e JavaScript; demonstração estática com dados ilustrativos |
+| Dashboard | MVP frontend em HTML, CSS e JavaScript; interface web servida pela API em `/`: ao vivo (resumo, alertas e assistente) com a API ativa, demonstração estática com dados ilustrativos sem ela |
 | InfoFrota AI | Assistente Python Text-to-SQL, com RAG de esquema e avaliação experimental |
 | API | FastAPI com `/saude`, `/perguntar`, `/alertas` e `/resumo` |
 | Automação | Workflow n8n de consulta de alertas críticos e envio de notificação por webhook |
@@ -44,7 +44,7 @@ Provedor LLM (Groq ou outro compatível com OpenAI API)
 n8n Schedule Trigger ---> GET /alertas ---> filtro/formatacao ---> Discord/Slack webhook
 ```
 
-No `compose.yaml`, a API é exposta somente à rede Docker (`expose: 8000`), sem publicar a porta 8000 no host. O n8n acessa a API pelo nome do serviço `api`. A interface do n8n é publicada em `127.0.0.1:5678`.
+No `compose.yaml`, a API fica na rede Docker (`expose: 8000`) e também no loopback do host (`127.0.0.1:8000`), onde serve a interface web; não é acessível por outras máquinas. O n8n acessa a API pelo nome do serviço `api`. A interface do n8n é publicada em `127.0.0.1:5678`.
 
 A chave do provedor LLM deve permanecer no ambiente do backend (`.env.api`), nunca em nós ou credenciais do n8n. `INFOFROTA_API_KEY`, quando habilitada, é uma chave interna opcional para autenticar chamadas à API e é diferente da chave Groq.
 
@@ -81,7 +81,7 @@ Requisitos: Docker Desktop com Docker Compose e o arquivo local `data/infofrota.
    docker compose ps
    ```
 
-5. Acesse o n8n em `http://localhost:5678`. A API permanece interna à rede Docker; de dentro do n8n, use `http://api:8000`.
+5. Acesse o n8n em `http://localhost:5678` e a interface em `http://127.0.0.1:8000`. De dentro do n8n, use `http://api:8000`.
 
 Para consultar logs:
 

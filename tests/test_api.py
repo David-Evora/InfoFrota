@@ -31,7 +31,7 @@ def resposta(sql, pode=True, motivo=""):
 @unittest.skipUnless(TEM_FASTAPI, "fastapi não instalado")
 class ApiTest(unittest.TestCase):
     def setUp(self):
-        for k in ("INFOFROTA_API_KEY", "INFOFROTA_LIMITE_POR_MIN"):
+        for k in ("INFOFROTA_API_KEY", "INFOFROTA_LIMITE_POR_MIN", "INFOFROTA_WEB"):
             os.environ.pop(k, None)
 
     def cliente(self, saida):
@@ -101,6 +101,26 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(len(r["linhas"]), 5)
         self.assertEqual(c.get("/resumo", params={"data": "2020-01-01"}).status_code, 404)
         self.assertEqual(c.get("/resumo", params={"data": "01/11/2026"}).status_code, 422)
+
+    def test_resumo_limite_e_campos_da_linha(self):
+        c = TestClient(create_app())
+        todas = c.get("/resumo", params={"limite": 50}).json()
+        self.assertEqual(len(todas["linhas"]), todas["total_linhas"])
+        self.assertTrue(all({"linha", "linha_nome", "tipo", "media_percentual"} <= set(l) for l in todas["linhas"]))
+        medias = [l["media_percentual"] for l in todas["linhas"]]
+        self.assertEqual(medias, sorted(medias, reverse=True))
+        self.assertEqual(c.get("/resumo", params={"limite": 0}).status_code, 422)
+        self.assertEqual(c.get("/resumo", params={"limite": 51}).status_code, 422)
+
+    def test_interface_web_na_mesma_origem(self):
+        c = TestClient(create_app())
+        pagina = c.get("/")
+        self.assertEqual(pagina.status_code, 200)
+        self.assertIn("InfoFrota", pagina.text)
+        self.assertEqual(c.get("/assets/app.js").status_code, 200)
+        self.assertEqual(c.get("/saude").json()["status"], "ok")      # a API não é encoberta pela interface
+        os.environ["INFOFROTA_WEB"] = "0"
+        self.assertEqual(TestClient(create_app()).get("/").status_code, 404)
 
 
 if __name__ == "__main__":
