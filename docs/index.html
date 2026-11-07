@@ -1,193 +1,518 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#102b46">
-  <meta name="description" content="InfoFrota — protótipo de uma plataforma de inteligência operacional para o transporte coletivo da Grande Vitória. Dados sintéticos; com a API local ativa, o painel e o assistente consultam o banco experimental.">
-  <title>InfoFrota | Inteligência operacional</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <title>InfoFrota — Inteligência e tecnologia para frotas</title>
+  <meta name="description" content="Conheça o InfoFrota, um projeto de tecnologia voltado à inteligência de dados, processamento de informações e automação para frotas de transporte coletivo.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0B1220">
+  <meta name="infofrota-api" content="../">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="InfoFrota — Inteligência e tecnologia para frotas">
+  <meta property="og:description" content="Dados de frota, RAG, Text-to-SQL e automação com n8n em um projeto independente e de código aberto. Protótipo com dados sintéticos.">
+  <meta property="og:image" content="assets/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    /* Aplica o tema antes da primeira pintura (evita flash). Ordem: escolha salva > preferência do sistema. */
+    (function () {
+      document.documentElement.classList.add("js");
+      var t = "dark";
+      try { t = localStorage.getItem("infofrota-tema") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch (e) {}
+      document.documentElement.dataset.theme = t === "light" ? "light" : "dark";
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/sections.css">
 </head>
-<body data-mode="demo">
-  <a class="skip-link" href="#main">Pular para o conteúdo</a>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#overview" aria-label="InfoFrota - Início">
-        <span class="brand-mark">IF</span>
-        <span class="brand-copy"><strong>InfoFrota</strong><small>INTELIGÊNCIA OPERACIONAL</small></span>
-      </a>
-      <div class="side-caption">PLATAFORMA</div>
-      <nav class="navigation" aria-label="Navegação principal">
-        <button class="nav-item active" data-view="overview" aria-current="page"><span class="nav-icon" aria-hidden="true">◫</span><span>Visão geral</span></button>
-        <button class="nav-item" data-view="lines"><span class="nav-icon" aria-hidden="true">⇄</span><span>Linhas</span></button>
-        <button class="nav-item" data-view="fleet"><span class="nav-icon" aria-hidden="true">▣</span><span>Frota</span></button>
-        <button class="nav-item" data-view="reports"><span class="nav-icon" aria-hidden="true">▤</span><span>Relatórios</span></button>
-        <button class="nav-item" data-view="assistant"><span class="nav-icon" aria-hidden="true">✳</span><span>Assistente IA</span><span class="nav-tag">BETA</span></button>
-      </nav>
-      <div class="sidebar-bottom">
-        <div class="project-card">
-          <span class="project-card-icon" aria-hidden="true">✦</span>
-          <strong>Projeto em evolução</strong>
-          <p>Da informação operacional à inteligência para o planejamento.</p>
-          <a href="https://github.com/David-Evora/InfoFrota#readme" target="_blank" rel="noreferrer">Conheça o projeto <span aria-hidden="true">↗</span></a>
-        </div>
-        <div class="sidebar-foot"><span class="foot-dot" id="modeDot"></span><span id="modeFoot">DEMONSTRAÇÃO ESTÁTICA</span></div>
-      </div>
-    </aside>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16" /> <path d="M4 12h16" /> <path d="M4 19h16" /></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /> <path d="M12 2v2" /> <path d="M12 20v2" /> <path d="m4.93 4.93 1.41 1.41" /> <path d="m17.66 17.66 1.41 1.41" /> <path d="M2 12h2" /> <path d="M20 12h2" /> <path d="m6.34 17.66-1.41 1.41" /> <path d="m19.07 4.93-1.41 1.41" /></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="m12 5 7 7-7 7" /></symbol>
+<symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10" /> <path d="M7 17 17 7" /></symbol>
+<symbol id="i-message-square-text" viewBox="0 0 24 24"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" /> <path d="M7 11h10" /> <path d="M7 15h6" /> <path d="M7 7h8" /></symbol>
+<symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 5V19A9 3 0 0 0 21 19V5" /> <path d="M3 12A9 3 0 0 0 21 12" /></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path d="m9 12 2 2 4-4" /></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0" /> <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" /></symbol>
+<symbol id="i-workflow" viewBox="0 0 24 24"><rect width="8" height="8" x="3" y="3" rx="2" /> <path d="M7 11v4a2 2 0 0 0 2 2h4" /> <rect width="8" height="8" x="13" y="13" rx="2" /></symbol>
+<symbol id="i-container" viewBox="0 0 24 24"><path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z" /> <path d="M10 21.9V14L2.1 9.1" /> <path d="m10 14 11.9-6.9" /> <path d="M14 19.8v-8.1" /> <path d="M18 17.5V9.4" /></symbol>
+<symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5" /> <path d="M15 8V2" /> <path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z" /> <path d="M9 8V2" /></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2" /> <rect width="20" height="8" x="2" y="14" rx="2" ry="2" /> <line x1="6" x2="6.01" y1="6" y2="6" /> <line x1="6" x2="6.01" y1="18" y2="18" /></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><path d="M12 20v2" /> <path d="M12 2v2" /> <path d="M17 20v2" /> <path d="M17 2v2" /> <path d="M2 12h2" /> <path d="M2 17h2" /> <path d="M2 7h2" /> <path d="M20 12h2" /> <path d="M20 17h2" /> <path d="M20 7h2" /> <path d="M7 20v2" /> <path d="M7 2v2" /> <rect x="4" y="4" width="16" height="16" rx="2" /> <rect x="8" y="8" width="8" height="8" rx="1" /></symbol>
+<symbol id="i-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16" /> <path d="M18 17V9" /> <path d="M13 17V5" /> <path d="M8 17v-3" /></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" /></symbol>
+<symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M15 6a9 9 0 0 0-9 9V3" /> <circle cx="18" cy="6" r="3" /> <circle cx="6" cy="18" r="3" /></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 6v6l4 2" /></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /> <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /> <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /> <path d="M20 2v4" /> <path d="M22 4h-4" /> <circle cx="4" cy="20" r="2" /></symbol>
+<symbol id="i-terminal" viewBox="0 0 24 24"><path d="M12 19h8" /> <path d="m4 17 6-6-6-6" /></symbol>
+<symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3" /> <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" /> <circle cx="18" cy="5" r="3" /></symbol>
+<symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol>
+<symbol id="i-file-code-2" viewBox="0 0 24 24"><path d="M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="m5 16-3 3 3 3" /> <path d="m9 22 3-3-3-3" /></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
+<symbol id="i-key-round" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+<symbol id="i-flask-conical" viewBox="0 0 24 24"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2" /> <path d="M6.453 15h11.094" /> <path d="M8.5 2h7" /></symbol>
+<symbol id="i-webhook" viewBox="0 0 24 24"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" /> <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06" /> <path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8" /></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2" /> <line x1="12" x2="15" y1="14" y2="11" /> <circle cx="12" cy="14" r="8" /></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path d="M2 12h20" /></symbol>
+<symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1" /> <rect width="7" height="5" x="14" y="3" rx="1" /> <rect width="7" height="9" x="14" y="12" rx="1" /> <rect width="7" height="5" x="3" y="16" rx="1" /></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol>
+<symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" /></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" /></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+<symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.921.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+</svg>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
-    <main class="main-area" id="main" tabindex="-1">
-      <header class="topbar">
-        <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">☰</button>
-        <div class="breadcrumb"><span>InfoFrota</span><b>/</b><strong id="breadcrumbCurrent">Visão geral</strong></div>
-        <div class="topbar-right">
-          <span class="demo-pill" id="modePill"><i></i><span id="modePillText">Dados demonstrativos</span></span>
-          <a class="github-link" href="https://github.com/David-Evora/InfoFrota" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+<header class="nav" id="nav">
+  <div class="wrap nav__bar">
+    <a class="brand" href="#inicio" aria-label="InfoFrota — início">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M8 22c4 0 4-12 8-12s4 12 8 12" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="22" r="2.2" fill="#fff"/><circle cx="24" cy="22" r="2.2" fill="#fff"/></svg>
+      <span class="brand__name">Info<b>Frota</b></span>
+    </a>
+    <nav class="nav__links" id="navLinks" aria-label="Principal">
+      <a href="#plataforma">Plataforma</a>
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#ia">Inteligência Artificial</a>
+      <a href="#dados">Dados</a>
+      <a href="#automacao">Automação</a>
+      <a href="#tecnologia">Tecnologia</a>
+      <a href="#sobre">Sobre</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="iconbtn" id="themeToggle" type="button" aria-label="Alternar tema claro e escuro" aria-pressed="false">
+        <svg class="icon icon--moon" aria-hidden="true"><use href="#i-moon"/></svg>
+        <svg class="icon icon--sun" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+      <a class="btn btn--sm btn--ghost nav__gh" href="https://github.com/David-Evora/InfoFrota" target="_blank" rel="noopener">
+        <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span>
+      </a>
+      <a class="btn btn--sm btn--primary nav__cta" href="#contato">Contato</a>
+      <button class="iconbtn nav__burger" id="navBurger" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks">
+        <svg class="icon icon--open" aria-hidden="true"><use href="#i-menu"/></svg>
+        <svg class="icon icon--close" aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+
+  <!-- 1 · HERO -->
+  <section class="hero" id="inicio" aria-labelledby="hero-title">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="wrap hero__inner">
+      <div class="hero__copy">
+        <p class="eyebrow reveal"><span class="live-dot" aria-hidden="true"></span>Projeto independente · Grande Vitória · em desenvolvimento</p>
+        <h1 class="display reveal" id="hero-title">Transforme dados de frota em <em>inteligência</em>.</h1>
+        <p class="lead reveal">Um projeto que conecta dados operacionais, recuperação de contexto e modelos de linguagem para tornar a informação do transporte coletivo mais fácil de consultar e de entender.</p>
+        <div class="actions reveal">
+          <a class="btn btn--primary btn--lg" href="#plataforma">Conheça a plataforma<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn--ghost btn--lg" href="#funcionalidades">Explore as funcionalidades</a>
         </div>
+        <ul class="hero__facts reveal" aria-label="Estado do projeto">
+          <li><span>Protótipo funcional</span></li>
+          <li><span>Dados sintéticos</span></li>
+          <li><span>Código aberto · MIT</span></li>
+        </ul>
+      </div>
+
+      <div class="stage" id="stage" role="group" aria-label="Composição ilustrativa: rede de linhas, ocupação, alerta e pergunta ao assistente">
+        <div class="stage__layer stage__layer--map" data-depth="6">
+          <svg viewBox="0 0 640 520" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="r1" x1="0" x2="1"><stop offset="0" stop-color="var(--accent-2)"/><stop offset="1" stop-color="var(--accent-text)"/></linearGradient>
+            </defs>
+            <g class="net__faint">
+              <path d="M30 400 C150 380 210 300 320 290 S520 330 620 250"/>
+              <path d="M60 120 C140 160 230 150 300 210 S470 400 610 430"/>
+              <path d="M120 40 L190 190 L260 330 L300 500"/>
+              <path d="M10 250 L200 250 L330 160 L470 160 L620 90"/>
+            </g>
+            <path id="route-a" class="net__route net__route--a" d="M40 410 C130 330 210 340 290 270 S440 150 600 120"/>
+            <path id="route-b" class="net__route net__route--b" d="M70 100 C150 170 230 190 310 250 S470 380 590 440"/>
+            <path id="route-c" class="net__route net__route--c" d="M140 480 C190 400 230 320 310 250 S400 110 440 40"/>
+            <g class="net__stops">
+              <circle cx="40" cy="410" r="5"/><circle cx="160" cy="338" r="4"/><circle cx="290" cy="270" r="7" class="hub"/><circle cx="430" cy="170" r="4"/><circle cx="600" cy="120" r="5"/>
+              <circle cx="70" cy="100" r="5"/><circle cx="188" cy="178" r="4"/><circle cx="410" cy="330" r="4"/><circle cx="590" cy="440" r="5"/>
+              <circle cx="140" cy="480" r="5"/><circle cx="440" cy="40" r="5"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="panel stage__panel stage__panel--occ" data-depth="14">
+          <div class="panel__head"><span class="mono">Ocupação no pico</span><span class="tag tag--synthetic">sintético</span></div>
+          <ul class="bars" id="heroBars" aria-label="Ocupação média por linha"></ul>
+        </div>
+
+        <div class="panel stage__panel stage__panel--alert" data-depth="20" id="heroAlert">
+          <div class="alert-chip"><svg class="icon" aria-hidden="true"><use href="#i-triangle-alert"/></svg><div><b id="heroAlertTitle">Alerta crítico</b><span class="mono" id="heroAlertMeta"></span></div></div>
+        </div>
+
+        <div class="panel stage__panel stage__panel--ai" data-depth="10">
+          <div class="panel__head"><span class="mono">Pergunte em português</span><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg></div>
+          <p class="typed" id="heroTyped" aria-live="off"><span id="heroTypedText"></span><i class="caret" aria-hidden="true"></i></p>
+          <pre class="miniSql mono" id="heroSql" aria-hidden="true"></pre>
+        </div>
+
+        <p class="stage__tag mono">Ilustrativo · dados sintéticos · sem GPS</p>
+      </div>
+    </div>
+    <a class="scrollcue" href="#plataforma" aria-label="Rolar para a próxima seção"><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></a>
+  </section>
+
+  <!-- 2 · INTRODUÇÃO -->
+  <section class="section intro" id="plataforma" aria-labelledby="intro-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">01</span>O problema</p>
+        <h2 class="h2 reveal" id="intro-title">Dados de transporte existem aos montes. <em>Entendê-los</em> é a parte difícil.</h2>
       </header>
 
-      <div class="demo-notice" id="modeNotice" role="note"><span class="notice-icon" aria-hidden="true">ⓘ</span><span id="modeNoticeText"><strong>Ambiente demonstrativo:</strong> todos os números, veículos, alertas, gráficos e posições desta página são fictícios. Não há conexão com sensores, dados reais, CETURB/ES ou banco operacional.</span></div>
+      <div class="intro__grid">
+        <ol class="steps" id="introSteps">
+          <li class="step is-active" data-step="0">
+            <span class="step__n mono">01</span>
+            <h3>Registros soltos</h3>
+            <p>Ocupação, linhas, paradas, horários e clima vivem em tabelas diferentes. Cada pergunta vira uma consulta escrita à mão, por quem conhece o esquema.</p>
+          </li>
+          <li class="step" data-step="1">
+            <span class="step__n mono">02</span>
+            <h3>Contexto recuperado</h3>
+            <p>O InfoFrota busca só o que importa para a pergunta — tabelas, valores válidos e regras do domínio — para o modelo não adivinhar nomes de colunas.</p>
+          </li>
+          <li class="step" data-step="2">
+            <span class="step__n mono">03</span>
+            <h3>Informação acionável</h3>
+            <p>A pergunta em português vira uma consulta validada, somente leitura. O resultado volta como tabela, resumo ou alerta que alguém pode usar.</p>
+          </li>
+        </ol>
 
-      <section class="view active" id="view-overview">
-        <div class="page-heading">
-          <div><div class="eyebrow">CENTRO DE INTELIGÊNCIA · GRANDE VITÓRIA</div><h1>Visão geral da operação</h1><p>Uma visão integrada para compreender a demanda e apoiar o planejamento do transporte coletivo.</p></div>
-          <div class="heading-date"><span class="calendar-icon" aria-hidden="true">▦</span><span><small id="headingDateLabel">AMBIENTE DE EXEMPLO</small><strong id="headingDateValue">Dia útil · Simulação</strong></span></div>
-        </div>
-        <div class="kpi-grid">
-          <article class="kpi-card"><div class="kpi-top"><span class="kpi-label">Veículos no cenário</span><span class="kpi-icon blue" aria-hidden="true">▣</span></div><div class="kpi-value">42</div><div class="kpi-foot"><span class="neutral-tag">Exemplo</span><span>Frota ilustrativa</span></div></article>
-          <article class="kpi-card"><div class="kpi-top"><span class="kpi-label">Ocupação média</span><span class="kpi-icon aqua" aria-hidden="true">♙</span></div><div class="kpi-value">76<span class="unit">%</span></div><div class="kpi-foot"><span class="orange-text">Demanda elevada</span><span>Indicador fictício</span></div></article>
-          <article class="kpi-card"><div class="kpi-top"><span class="kpi-label">Alertas do cenário</span><span class="kpi-icon coral" aria-hidden="true">!</span></div><div class="kpi-value">08</div><div class="kpi-foot"><span class="red-text">02 críticos</span><span>Ocorrências simuladas</span></div></article>
-          <article class="kpi-card"><div class="kpi-top"><span class="kpi-label">Linhas monitoradas</span><span class="kpi-icon violet" aria-hidden="true">⇄</span></div><div class="kpi-value">07</div><div class="kpi-foot"><span class="neutral-tag">Recorte de exemplo</span><span>Não operacional</span></div></article>
-        </div>
+        <figure class="intro__visual">
+          <svg id="introViz" viewBox="0 0 520 400" role="img" aria-label="Registros dispersos que se agrupam por linha e se organizam em uma tabela com um alerta destacado"></svg>
+          <figcaption class="mono" id="introCaption">Registros dispersos · ilustração</figcaption>
+        </figure>
+      </div>
 
-        <div class="content-grid overview-grid">
-          <article class="panel occupancy-panel">
-            <div class="panel-head"><div><h2>Ocupação por linha</h2><p id="barsSub">Percentual ilustrativo de ocupação média</p></div><span class="panel-menu" aria-hidden="true">⋯</span></div>
-            <div class="chart-legend"><span><i class="legend-blue"></i><span id="barsLegend">Ocupação simulada</span></span><span class="legend-note" id="barsScale">Capacidade de referência: 100%</span></div>
-            <div class="bar-chart" id="overviewBars">
-              <div class="bar-row"><span class="bar-name">501</span><div class="bar-track"><i style="width:62%"></i></div><b>62%</b></div>
-              <div class="bar-row"><span class="bar-name">591</span><div class="bar-track"><i class="high" style="width:92%"></i></div><b>92%</b></div>
-              <div class="bar-row"><span class="bar-name">531</span><div class="bar-track"><i style="width:71%"></i></div><b>71%</b></div>
-              <div class="bar-row"><span class="bar-name">508</span><div class="bar-track"><i style="width:54%"></i></div><b>54%</b></div>
-              <div class="bar-row"><span class="bar-name">562</span><div class="bar-track"><i class="high" style="width:87%"></i></div><b>87%</b></div>
-              <div class="bar-row"><span class="bar-name">901</span><div class="bar-track"><i style="width:66%"></i></div><b>66%</b></div>
-            </div>
-            <div class="panel-footnote" id="barsNote">Valores fictícios para demonstrar a leitura comparativa entre linhas.</div>
+      <dl class="defs">
+        <div class="def reveal"><dt>O que é</dt><dd>Um projeto independente que reúne dados de ocupação, frota, linhas e clima para apoiar o planejamento do transporte coletivo na Grande Vitória.</dd></div>
+        <div class="def reveal"><dt>Que problema ataca</dt><dd>A informação existe, mas está espalhada e exige conhecimento técnico para ser consultada e comparada.</dd></div>
+        <div class="def reveal"><dt>Por que dados importam</dt><dd>Picos de demanda, linhas sobrecarregadas e efeitos de calendário e clima só aparecem quando a informação é consolidada.</dd></div>
+        <div class="def reveal"><dt>Como a tecnologia ajuda</dt><dd>RAG, modelos de linguagem e automação transformam uma pergunta em resultado verificável e um evento em aviso.</dd></div>
+      </dl>
+      <p class="note reveal">O InfoFrota não é um sistema oficial da CETURB/ES nem possui endosso institucional. Hoje opera apenas sobre uma base experimental com dados sintéticos.</p>
+    </div>
+  </section>
+
+  <!-- 3 · EXPLORADOR DE FUNCIONALIDADES -->
+  <section class="section explorer" id="funcionalidades" aria-labelledby="exp-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">02</span>Biblioteca de funcionalidades</p>
+        <h2 class="h2 reveal" id="exp-title">Tudo o que existe hoje — e o que <em>ainda não</em> existe.</h2>
+        <p class="lead reveal">Cada item aponta para os arquivos do repositório que o comprovam. O que está em estudo aparece marcado como planejado.</p>
+      </header>
+
+      <div class="explorer__tools reveal">
+        <label class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span class="sr">Buscar funcionalidade</span><input id="featSearch" type="search" placeholder="Buscar: SQL, alertas, Docker…" autocomplete="off"></label>
+        <div class="seg" id="featStatus" role="group" aria-label="Filtrar por situação"></div>
+      </div>
+
+      <div class="explorer__body">
+        <nav class="cats" id="featCats" aria-label="Categorias"></nav>
+        <div>
+          <p class="count mono" id="featCount" role="status" aria-live="polite"></p>
+          <div class="grid" id="featGrid"></div>
+          <p class="empty hidden" id="featEmpty">Nenhuma funcionalidade encontrada. <button class="link" type="button" id="featReset">Limpar filtros</button></p>
+          <noscript><p class="empty">Ative o JavaScript para explorar a biblioteca ou leia a seção “Estado dos módulos” do <a href="https://github.com/David-Evora/InfoFrota#2-estado-dos-m%C3%B3dulos">README</a>.</p></noscript>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · IA / RAG -->
+  <section class="section ai" id="ia" aria-labelledby="ai-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">03</span>Inteligência artificial</p>
+        <h2 class="h2 reveal" id="ai-title">Não é só um chatbot. É um assistente que <em>mostra o caminho</em>.</h2>
+        <p class="lead reveal">Cada resposta passa por recuperação de contexto, geração de SQL e validação antes de tocar nos dados — e o caminho inteiro fica visível.</p>
+      </header>
+
+      <div class="console reveal" id="aiConsole">
+        <div class="console__top">
+          <div class="scen" id="aiScen" role="tablist" aria-label="Perguntas de exemplo"></div>
+          <span class="mode" id="aiMode" role="status"></span>
+        </div>
+        <div class="console__body">
+          <div class="chat" id="aiChat" aria-live="polite" aria-label="Conversa"></div>
+          <ol class="trace" id="aiTrace" aria-label="Etapas do processamento"></ol>
+        </div>
+        <form class="console__ask hidden" id="aiForm" novalidate>
+          <label class="sr" for="aiInput">Pergunta ao assistente</label>
+          <input id="aiInput" type="text" minlength="3" maxlength="500" placeholder="Pergunte algo sobre o banco sintético…" autocomplete="off">
+          <button class="btn btn--primary btn--sm" type="submit" id="aiSend">Perguntar</button>
+        </form>
+        <div class="console__foot">
+          <button class="btn btn--ghost btn--sm" type="button" id="aiReplay"><svg class="icon" aria-hidden="true"><use href="#i-repeat"/></svg>Reproduzir de novo</button>
+          <p class="mono" id="aiNote"></p>
+        </div>
+      </div>
+
+      <div class="ai__facts">
+        <article class="reveal"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><h3>Contexto antes da geração</h3><p>Um índice BM25 recupera tabelas, valores válidos e regras do domínio e os coloca no prompt.</p></article>
+        <article class="reveal"><svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Somente leitura, em três camadas</h3><p>Instrução única SELECT/WITH, authorizer do SQLite e conexão <code>mode=ro</code>, com limite de linhas e de tempo.</p></article>
+        <article class="reveal"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg><h3>Resposta rastreável</h3><p>O SQL gerado acompanha o resultado. Se a consulta falha, o modelo recebe o erro e tenta corrigir uma vez.</p></article>
+      </div>
+
+      <div class="eval reveal" id="aiEval">
+        <div class="eval__head">
+          <div><p class="mono eyebrow-sm">Avaliação experimental</p><h3>Benchmark congelado de 56 perguntas</h3></div>
+          <div class="seg" id="evalRound" role="group" aria-label="Rodada do experimento"></div>
+        </div>
+        <div class="eval__chart" id="evalChart"></div>
+        <p class="note" id="evalNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · DADOS -->
+  <section class="section data" id="dados" aria-labelledby="data-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">04</span>Inteligência de dados</p>
+        <h2 class="h2 reveal" id="data-title">Do registro bruto ao <em>padrão</em> que dá para enxergar.</h2>
+        <p class="lead reveal">Visualizações calculadas sobre o banco experimental. <strong>Todos os números são sintéticos</strong> e não representam a operação real.</p>
+      </header>
+      <p class="datatag mono reveal" id="dataTag"></p>
+
+      <div class="bento">
+        <article class="card bento__main reveal">
+          <div class="card__head">
+            <div><p class="mono eyebrow-sm">Ocupação por hora do dia</p><h3 id="mainTitle">Todas as linhas</h3></div>
+            <div class="pills" id="linePills" role="group" aria-label="Selecionar linha"></div>
+          </div>
+          <div class="chart" id="mainChart"></div>
+          <ul class="legend mono"><li><i class="sw sw--avg"></i>Média do período</li><li><i class="sw sw--max"></i>Maior leitura da hora</li><li><i class="sw sw--warn"></i>Atenção ≥ 75%</li><li><i class="sw sw--crit"></i>Crítico ≥ 90%</li></ul>
+        </article>
+
+        <article class="card bento__kpi reveal">
+          <p class="mono eyebrow-sm">Alertas no período</p>
+          <p class="bignum"><span id="kpiCrit">—</span><small>críticos</small></p>
+          <div class="ratio" id="kpiRatio" aria-hidden="true"><i></i></div>
+          <p class="muted"><span id="kpiAtt">—</span> de atenção · <span id="kpiPct">—</span> do total são críticos</p>
+          <div class="spark" id="kpiSpark"></div>
+          <p class="mono eyebrow-sm">Alertas críticos por dia · dias com registro</p>
+        </article>
+
+        <article class="card bento__heat reveal">
+          <div class="card__head"><div><p class="mono eyebrow-sm">Dia da semana × hora</p><h3>Quando a rede enche</h3></div></div>
+          <div class="heat" id="heat"></div>
+          <p class="muted" id="heatNote"></p>
+        </article>
+
+        <article class="card bento__rank reveal">
+          <div class="card__head"><div><p class="mono eyebrow-sm">Ranking de linhas</p><h3>Quem pressiona mais</h3></div>
+            <div class="seg seg--sm" id="rankSort" role="group" aria-label="Ordenar por"></div></div>
+          <ol class="rank" id="rank"></ol>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · AUTOMAÇÃO / ALERTAS -->
+  <section class="section auto" id="automacao" aria-labelledby="auto-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">05</span>Alertas e automação</p>
+        <h2 class="h2 reveal" id="auto-title">Do dado ao aviso, <em>a cada cinco minutos</em>.</h2>
+        <p class="lead reveal">O workflow n8n do repositório consulta a API, descarta o que já foi enviado e notifica um webhook do Discord ou do Slack.</p>
+      </header>
+
+      <div class="flow reveal">
+        <div class="flow__bar">
+          <span class="mono">Workflow <code>n8n/alerta-critico.json</code></span>
+          <button class="btn btn--ghost btn--sm" type="button" id="flowPlay"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Simular uma execução</button>
+        </div>
+        <ol class="flow__nodes" id="flowNodes"></ol>
+        <div class="flow__inspector" id="flowInspector" aria-live="polite"></div>
+      </div>
+
+      <div class="alerts">
+        <div class="alerts__levels">
+          <article class="lvl lvl--warn reveal">
+            <span class="lvl__tag mono">ATENÇÃO</span>
+            <h3>75% a menos de 90%</h3>
+            <p>Gerado e registrado na base. <strong>Não dispara</strong> notificação no workflow atual.</p>
           </article>
-
-          <article class="panel alert-panel">
-            <div class="panel-head"><div><h2>Situações de atenção</h2><p id="alertsSub">Exemplos de alertas que a plataforma poderá consolidar</p></div><span class="count-pill" id="alertCount">3 exemplos</span></div>
-            <div class="alert-list" id="alertList">
-              <div class="alert-item"><span class="alert-symbol critical" aria-hidden="true">!</span><div><strong>Linha 591 · Ocupação elevada</strong><p>Exemplo de leitura acima do limite de referência.</p><small>18:00 · Registro ilustrativo</small></div><span class="severity critical-text">Crítico</span></div>
-              <div class="alert-item"><span class="alert-symbol warning" aria-hidden="true">!</span><div><strong>Linha 562 · Demanda alta</strong><p>Exemplo de tendência de aumento no período.</p><small>17:30 · Registro ilustrativo</small></div><span class="severity warning-text">Atenção</span></div>
-              <div class="alert-item"><span class="alert-symbol info" aria-hidden="true">i</span><div><strong>Linha 501 · Variação de demanda</strong><p>Exemplo de oscilação em horário de pico.</p><small>16:45 · Registro ilustrativo</small></div><span class="severity info-text">Análise</span></div>
-            </div>
+          <article class="lvl lvl--crit reveal">
+            <span class="lvl__tag mono">CRÍTICO</span>
+            <h3>90% ou mais</h3>
+            <p>Entra na consulta do n8n e vira mensagem no webhook, uma vez por ID de alerta.</p>
           </article>
-
-          <article class="panel trend-panel">
-            <div class="panel-head"><div><h2>Comportamento ao longo do dia</h2><p>Curva didática de demanda por faixa horária</p></div><span class="demo-chip">Ilustrativo</span></div>
-            <div class="trend-chart">
-              <div class="y-labels" aria-hidden="true"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
-              <svg viewBox="0 0 620 190" role="img" aria-label="Gráfico ilustrativo de demanda por horário">
-                <defs><linearGradient id="areaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#32a8dc" stop-opacity=".23"/><stop offset="1" stop-color="#32a8dc" stop-opacity="0"/></linearGradient></defs>
-                <g class="grid-lines"><path d="M0 12H620M0 52H620M0 92H620M0 132H620M0 172H620"/></g>
-                <path class="area-path" d="M0 139 C40 130 52 118 90 122 S140 108 180 106 S230 68 270 78 S330 95 360 58 S420 30 450 48 S500 65 530 33 S585 50 620 25 V172 H0Z"/>
-                <path class="line-path" d="M0 139 C40 130 52 118 90 122 S140 108 180 106 S230 68 270 78 S330 95 360 58 S420 30 450 48 S500 65 530 33 S585 50 620 25"/>
-                <g class="chart-points"><circle cx="0" cy="139" r="4"/><circle cx="90" cy="122" r="4"/><circle cx="180" cy="106" r="4"/><circle cx="270" cy="78" r="4"/><circle cx="360" cy="58" r="4"/><circle cx="450" cy="48" r="4"/><circle cx="530" cy="33" r="4"/><circle cx="620" cy="25" r="4"/></g>
-              </svg>
-              <div class="x-labels" aria-hidden="true"><span>06h</span><span>08h</span><span>10h</span><span>12h</span><span>14h</span><span>16h</span><span>18h</span><span>20h</span></div>
-            </div>
-            <div class="insight-strip"><span class="insight-icon" aria-hidden="true">✦</span><div><strong>Leitura analítica ilustrativa</strong><p>O painel poderá destacar janelas de maior demanda para apoiar estudos de oferta e distribuição de frota. A curva acima não é calculada a partir da API.</p></div></div>
-          </article>
-
-          <article class="panel map-panel">
-            <div class="panel-head"><div><h2>Visão territorial</h2><p>Esquema visual da região metropolitana</p></div><span class="map-tag">MAPA ESQUEMÁTICO</span></div>
-            <div class="schematic-map">
-              <svg viewBox="0 0 560 270" role="img" aria-label="Mapa esquemático fictício da Grande Vitória">
-                <path class="water-shape" d="M360 0 C330 46 390 65 340 108 C300 142 360 175 316 220 L390 270 H560 V0Z"/>
-                <path class="road" d="M0 205 C90 190 130 230 210 180 S350 160 560 68"/><path class="road" d="M24 20 C100 80 150 70 210 120 S350 200 540 220"/><path class="road minor" d="M40 130 L470 132 M140 0 L170 270 M270 0 L260 270 M440 0 L420 270"/>
-                <path class="route route-a" d="M55 210 C110 175 130 155 205 120 S330 80 430 55"/><path class="route route-b" d="M75 35 C145 75 190 95 250 150 S360 215 465 225"/>
-                <g class="map-pins"><circle cx="90" cy="187" r="6"/><circle cx="205" cy="120" r="6"/><circle cx="345" cy="91" r="6"/><circle cx="430" cy="55" r="6"/><circle cx="250" cy="150" r="6"/><circle cx="465" cy="225" r="6"/></g>
-                <g class="map-labels"><text x="36" y="177">Vila Velha</text><text x="184" y="105">Vitória</text><text x="330" y="76">Serra</text><text x="413" y="40">Norte</text><text x="235" y="172">Cariacica</text><text x="446" y="245">Viana</text></g>
-              </svg>
-              <div class="map-stamp">ILUSTRATIVO · SEM GPS</div>
-            </div>
-            <div class="map-legend"><span><i class="route-key one"></i>Traçado conceitual A</span><span><i class="route-key two"></i>Traçado conceitual B</span><span>Não representa itinerários reais</span></div>
+          <article class="lvl lvl--ok reveal">
+            <span class="lvl__tag mono">RESOLVIDO</span>
+            <h3>Estado do alerta</h3>
+            <p>Cada alerta guarda se foi resolvido e se uma ação de precaução foi acionada.</p>
           </article>
         </div>
-      </section>
+        <figure class="notify reveal">
+          <figcaption class="mono">Mensagem montada pelo workflow · exemplo com dados sintéticos</figcaption>
+          <div class="notify__card" id="notifyCard"></div>
+        </figure>
+      </div>
+      <p class="note reveal">A deduplicação grava os IDs no armazenamento do próprio workflow. A persistência ainda precisa ser validada na instância do n8n com o workflow ativo — por isso aparece como <em>em validação</em> na biblioteca.</p>
+    </div>
+  </section>
 
-      <section class="view" id="view-lines">
-        <div class="page-heading"><div><div class="eyebrow">ANÁLISE OPERACIONAL</div><h1>Linhas de transporte</h1><p id="linesSub">Comparação ilustrativa de demanda, ocupação e horários de pico por linha.</p></div><span class="demo-chip" id="linesChip">Base fictícia</span></div>
-        <div class="panel table-panel"><div class="panel-head"><div><h2 id="linesTitle">Linhas do cenário demonstrativo</h2><p id="linesNote">Os valores abaixo não são dados oficiais nem leituras reais.</p></div><input class="search-input" id="lineSearch" type="search" placeholder="Buscar linha..." aria-label="Buscar linha"></div>
-          <div class="table-wrap"><table><thead id="linesHead"><tr><th>Linha</th><th>Perfil de exemplo</th><th>Ocupação média</th><th>Pico ilustrativo</th><th>Situação do cenário</th></tr></thead><tbody id="linesTable">
-          <tr><td><strong>501</strong></td><td>Convencional</td><td><span class="percent-bar"><i style="width:62%"></i></span>62%</td><td>07:30</td><td><span class="status normal">Moderada</span></td></tr>
-          <tr><td><strong>591</strong></td><td>Convencional</td><td><span class="percent-bar"><i class="hot" style="width:92%"></i></span>92%</td><td>18:00</td><td><span class="status critical">Crítica</span></td></tr>
-          <tr><td><strong>531</strong></td><td>Convencional</td><td><span class="percent-bar"><i style="width:71%"></i></span>71%</td><td>17:30</td><td><span class="status normal">Moderada</span></td></tr>
-          <tr><td><strong>508</strong></td><td>Convencional</td><td><span class="percent-bar"><i style="width:54%"></i></span>54%</td><td>08:00</td><td><span class="status normal">Estável</span></td></tr>
-          <tr><td><strong>562</strong></td><td>Expresso</td><td><span class="percent-bar"><i class="hot" style="width:87%"></i></span>87%</td><td>17:30</td><td><span class="status attention">Atenção</span></td></tr>
-          <tr><td><strong>901</strong></td><td>Noturna</td><td><span class="percent-bar"><i style="width:66%"></i></span>66%</td><td>19:00</td><td><span class="status normal">Moderada</span></td></tr>
-          </tbody></table></div>
+  <!-- 7 · ARQUITETURA -->
+  <section class="section arch" id="tecnologia" aria-labelledby="arch-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">06</span>Tecnologia</p>
+        <h2 class="h2 reveal" id="arch-title">Engenharia que dá para <em>abrir e conferir</em>.</h2>
+        <p class="lead reveal">Cada módulo abaixo existe no repositório. Os tracejados são ideias em estudo e ainda não estão conectados.</p>
+      </header>
+
+      <div class="arch reveal" id="arch">
+        <svg class="arch__wires" id="archWires" aria-hidden="true"></svg>
+        <div class="arch__layer" data-layer="Dados"><span class="arch__label mono">Dados</span><div class="arch__row" id="archA"></div></div>
+        <div class="arch__layer" data-layer="Núcleo"><span class="arch__label mono">Núcleo</span><div class="arch__row" id="archB"></div></div>
+        <div class="arch__layer" data-layer="Consumo"><span class="arch__label mono">Consumo e automação</span><div class="arch__row" id="archC"></div></div>
+        <div class="arch__layer arch__layer--ghost" data-layer="Em estudo"><span class="arch__label mono">Em estudo</span><div class="arch__row" id="archD"></div></div>
+      </div>
+      <div class="arch__inspector card" id="archInspector" aria-live="polite"></div>
+      <ul class="chips reveal" aria-label="Tecnologias confirmadas no repositório" id="techChips"></ul>
+    </div>
+  </section>
+
+  <!-- 8 · VITRINE DO PRODUTO -->
+  <section class="section show" id="produto" aria-labelledby="show-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">07</span>Protótipo</p>
+        <h2 class="h2 reveal" id="show-title">A interface que <em>já roda</em>.</h2>
+        <p class="lead reveal">Capturas reais do protótipo em <code>docs/index.html</code>, servido pela própria API. É um protótipo com dados sintéticos, não um produto em operação.</p>
+      </header>
+      <div class="device reveal">
+        <div class="device__bar">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="device__url mono">127.0.0.1:8000</span>
+          <div class="tabs" id="showTabs" role="tablist" aria-label="Telas do protótipo"></div>
         </div>
-        <div class="two-cards"><article class="panel"><h2>Leituras que a plataforma poderá oferecer</h2><ul class="feature-list"><li>Comparação de ocupação por linha e faixa horária.</li><li>Identificação de picos e variações entre dias.</li><li>Histórico de alertas e ocorrências por trecho.</li><li>Correlação exploratória com calendário e clima.</li></ul></article><article class="panel"><h2>Limite desta demonstração</h2><p class="body-copy" id="linesLimit">Os dados desta tela foram escritos apenas para demonstrar como uma consulta poderia ser apresentada. A página não importa a base operacional nem calcula indicadores a partir de sensores.</p></article></div>
-      </section>
+        <div class="device__screen" id="showScreen"></div>
+      </div>
+      <p class="muted center reveal" id="showCaption"></p>
+    </div>
+  </section>
 
-      <section class="view" id="view-fleet">
-        <div class="page-heading"><div><div class="eyebrow">ACOMPANHAMENTO DA FROTA</div><h1>Frota e veículos</h1><p>Representação demonstrativa de cartões de veículos e estados operacionais.</p></div><span class="demo-chip">Sem rastreamento real</span></div>
-        <div class="kpi-grid compact-kpis"><article class="kpi-card"><div class="kpi-label">Veículos no cenário</div><div class="kpi-value">42</div><div class="kpi-foot">Quantidade ilustrativa</div></article><article class="kpi-card"><div class="kpi-label">Em circulação</div><div class="kpi-value">36</div><div class="kpi-foot">Estado fictício</div></article><article class="kpi-card"><div class="kpi-label">Em atenção</div><div class="kpi-value">04</div><div class="kpi-foot">Estado fictício</div></article><article class="kpi-card"><div class="kpi-label">Indisponíveis</div><div class="kpi-value">02</div><div class="kpi-foot">Estado fictício</div></article></div>
-        <div class="vehicle-grid">
-          <article class="vehicle-card"><div class="vehicle-top"><span class="bus-icon" aria-hidden="true">▰</span><span class="status normal">Em circulação</span></div><strong>Veículo demonstrativo 01</strong><small>Linha 591 · Identificador fictício</small><div class="vehicle-occupancy"><div><span>Ocupação ilustrativa</span><b>92%</b></div><div class="progress"><i class="hot" style="width:92%"></i></div></div></article>
-          <article class="vehicle-card"><div class="vehicle-top"><span class="bus-icon" aria-hidden="true">▰</span><span class="status attention">Atenção</span></div><strong>Veículo demonstrativo 02</strong><small>Linha 562 · Identificador fictício</small><div class="vehicle-occupancy"><div><span>Ocupação ilustrativa</span><b>87%</b></div><div class="progress"><i class="hot" style="width:87%"></i></div></div></article>
-          <article class="vehicle-card"><div class="vehicle-top"><span class="bus-icon" aria-hidden="true">▰</span><span class="status normal">Em circulação</span></div><strong>Veículo demonstrativo 03</strong><small>Linha 501 · Identificador fictício</small><div class="vehicle-occupancy"><div><span>Ocupação ilustrativa</span><b>62%</b></div><div class="progress"><i style="width:62%"></i></div></div></article>
-          <article class="vehicle-card"><div class="vehicle-top"><span class="bus-icon" aria-hidden="true">▰</span><span class="status normal">Em circulação</span></div><strong>Veículo demonstrativo 04</strong><small>Linha 508 · Identificador fictício</small><div class="vehicle-occupancy"><div><span>Ocupação ilustrativa</span><b>54%</b></div><div class="progress"><i style="width:54%"></i></div></div></article>
-        </div>
-        <div class="inline-disclaimer">Os cartões representam um possível formato de visualização. Nenhuma placa, localização ou identificação real é exibida. Esta tela não está ligada à API.</div>
-      </section>
+  <!-- 9 · SOBRE -->
+  <section class="section about" id="sobre" aria-labelledby="about-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow reveal"><span class="idx">08</span>Sobre o projeto</p>
+        <h2 class="h2 reveal" id="about-title">Informação de frota ao alcance de <em>quem decide</em>.</h2>
+        <p class="lead reveal">O InfoFrota nasceu para facilitar o acesso a informações de ocupação e frota do transporte coletivo. A direção é usar processamento inteligente para responder perguntas, apontar situações de atenção e apoiar o planejamento — sempre dizendo com clareza o que é dado real e o que não é.</p>
+      </header>
+      <div class="status3">
+        <article class="reveal"><h3><i class="d d--ok"></i>Implementado</h3><ul>
+          <li>Assistente Text-to-SQL com RAG de esquema</li><li>API FastAPI com quatro rotas</li><li>Guarda de SQL somente leitura</li><li>Docker Compose com API e n8n</li><li>Workflow n8n de alerta crítico</li><li>Interface web de protótipo</li></ul></article>
+        <article class="reveal"><h3><i class="d d--acc"></i>Experimental</h3><ul>
+          <li>Fine-tuning LoRA do Llama 3.1 8B</li><li>Benchmark de 56 perguntas</li><li>Base SQLite com dados sintéticos</li><li>Persistência da deduplicação no n8n</li></ul></article>
+        <article class="reveal"><h3><i class="d d--plan"></i>Em estudo</h3><ul>
+          <li>Captação embarcada de passageiros</li><li>Conectividade embarcada e sincronização offline</li><li>Integração com dados operacionais autorizados</li><li>Autenticação e hardening para produção</li></ul></article>
+      </div>
+      <p class="note reveal">Projeto independente e de código aberto (licença MIT). Contatos ou apresentações a órgãos públicos não significam aprovação, parceria ou endosso.</p>
+    </div>
+  </section>
 
-      <section class="view" id="view-reports">
-        <div class="page-heading"><div><div class="eyebrow">INTELIGÊNCIA DE DEMANDA</div><h1>Relatórios e análises</h1><p>Estrutura de relatórios que poderão apoiar o planejamento de oferta e frota.</p></div><span class="demo-chip">Exemplo conceitual</span></div>
-        <div class="report-grid"><article class="report-card"><span class="report-icon blue" aria-hidden="true">◷</span><h3>Faixas horárias</h3><p>Comparação de demanda por hora, dia da semana e período.</p><span class="report-link">Relatório planejado <b aria-hidden="true">→</b></span></article><article class="report-card"><span class="report-icon aqua" aria-hidden="true">⇄</span><h3>Desempenho por linha</h3><p>Ocupação média, máximas, alertas e variações por linha.</p><span class="report-link">Relatório planejado <b aria-hidden="true">→</b></span></article><article class="report-card"><span class="report-icon violet" aria-hidden="true">☁</span><h3>Demanda e clima</h3><p>Exploração de possíveis relações entre chuva, temperatura e demanda.</p><span class="report-link">Relatório planejado <b aria-hidden="true">→</b></span></article><article class="report-card"><span class="report-icon coral" aria-hidden="true">▣</span><h3>Alocação de frota</h3><p>Subsídios para comparar oferta planejada e padrões estimados de demanda.</p><span class="report-link">Relatório planejado <b aria-hidden="true">→</b></span></article></div>
-        <article class="panel report-note"><div class="insight-icon" aria-hidden="true">✦</div><div><h2>Da análise ao planejamento</h2><p>O objetivo é consolidar informação para que equipes responsáveis possam avaliar ajustes de oferta, reforço de viagens e distribuição de frota. As decisões continuariam dependendo de validação operacional e critérios do gestor.</p></div></article>
-      </section>
+  <!-- 10 · CTA -->
+  <section class="cta" id="contato" aria-labelledby="cta-title">
+    <div class="cta__grid" aria-hidden="true"></div>
+    <div class="wrap cta__inner">
+      <h2 class="display display--md reveal" id="cta-title">Mais inteligência. Mais clareza. <em>Mais controle.</em></h2>
+      <p class="lead reveal">Explore o código, rode o protótipo na sua máquina e veja como dados de frota viram informação útil.</p>
+      <div class="actions reveal">
+        <a class="btn btn--primary btn--lg" href="https://github.com/David-Evora/InfoFrota" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Conhecer o InfoFrota</a>
+        <button class="btn btn--ghost btn--lg" type="button" id="runOpen"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>Rodar localmente</button>
+      </div>
+      <p class="muted reveal">O contato acontece pelo repositório no GitHub.</p>
+    </div>
+  </section>
+</main>
 
-      <section class="view" id="view-assistant">
-        <div class="page-heading"><div><div class="eyebrow">INFOFROTA AI</div><h1>Assistente de dados</h1><p id="assistantSub">Consulte informações operacionais em linguagem natural — experiência de interface em demonstração.</p></div><span class="demo-chip" id="assistantChip">Integração futura</span></div>
-        <div class="assistant-layout">
-          <article class="panel assistant-main">
-            <div class="assistant-title"><div class="ai-orb" aria-hidden="true">✳</div><div><h2>Converse com os dados</h2><p>Faça uma pergunta em português para explorar a base experimental.</p></div></div>
-            <div class="assistant-message"><span class="message-avatar" aria-hidden="true">IF</span><div><strong>InfoFrota AI</strong><p id="assistantIntro">Olá! Sou a camada experimental de consulta do InfoFrota. Nesta demonstração, vou mostrar um exemplo de resposta, sem executar consultas no banco.</p></div></div>
-            <form id="assistantForm" novalidate>
-              <label for="assistantQuestion">Sua pergunta</label>
-              <textarea id="assistantQuestion" rows="3" maxlength="500" placeholder="Ex.: Quais linhas têm mais alertas críticos?"></textarea>
-              <div class="prompt-suggestions" role="group" aria-label="Sugestões de pergunta">
-                <button type="button" class="suggestion">Quais linhas têm mais alertas críticos?</button>
-                <button type="button" class="suggestion">Em que horário a linha 562 lota mais?</button>
-                <button type="button" class="suggestion">A chuva aumenta a lotação?</button>
-              </div>
-              <label class="check-row hidden" id="assistantTextoRow"><input type="checkbox" id="assistantTexto"> <span>Gerar também uma resposta em texto <small>(uma chamada extra ao modelo)</small></span></label>
-              <div class="assistant-actions"><small id="assistantHint">Resposta demonstrativa · sem execução SQL</small><button class="primary-button" id="assistantSubmit" type="submit"><span id="assistantSubmitText">Gerar exemplo</span> <span aria-hidden="true">↗</span></button></div>
-            </form>
-            <div class="assistant-result hidden" id="assistantResult" aria-live="polite">
-              <div class="result-head"><span id="resultTitle">EXEMPLO DE RESPOSTA</span><span class="demo-chip" id="resultChip">Fictício</span></div>
-              <p class="result-status hidden" id="resultStatus"></p>
-              <p class="result-text" id="answerText"></p>
-              <div class="result-table hidden" id="resultTable"></div>
-              <div class="sql-label" id="sqlLabel">SQL ilustrativo · não executado</div>
-              <pre id="sqlText"></pre>
-              <p class="result-foot" id="resultFoot">O módulo Text-to-SQL funciona via CLI e API em Python. Esta página estática não está conectada a ele; abra-a pela API local para consultar o banco experimental.</p>
-            </div>
-          </article>
-          <aside class="panel assistant-side"><h2>O que existe hoje</h2>
-            <div class="side-feature"><span>01</span><div><strong>Text-to-SQL</strong><p>Assistente em Python: pergunta em português, SQL somente leitura, resultado.</p></div></div>
-            <div class="side-feature"><span>02</span><div><strong>Fine-tuning LoRA</strong><p>64,3% em benchmark controlado de 56 perguntas sobre dados sintéticos (Llama 3.1 8B + LoRA).</p></div></div>
-            <div class="side-feature"><span>03</span><div><strong>RAG, API e interface</strong><p>RAG de esquema, API FastAPI e esta interface, que fica ao vivo quando aberta pela API local.</p></div></div>
-            <p class="model-note" id="modelInfo">O modelo usado ao vivo é o configurado no servidor e não é o modelo medido no benchmark.</p>
-            <a class="outline-link" href="https://github.com/David-Evora/InfoFrota/blob/main/docs/INFOFROTA_AI.md" target="_blank" rel="noreferrer">Ver documentação técnica <b aria-hidden="true">↗</b></a>
-          </aside>
-        </div>
-      </section>
-      <footer class="page-footer"><span>InfoFrota · Projeto em desenvolvimento</span><span id="footerNote">Protótipo visual · Dados fictícios · 2026</span></footer>
-    </main>
+<footer class="footer">
+  <div class="wrap footer__grid">
+    <div class="footer__brand">
+      <a class="brand" href="#inicio"><svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M8 22c4 0 4-12 8-12s4 12 8 12" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="22" r="2.2" fill="#fff"/><circle cx="24" cy="22" r="2.2" fill="#fff"/></svg><span class="brand__name">Info<b>Frota</b></span></a>
+      <p>Inteligência de dados, processamento de informações e automação para frotas de transporte coletivo.</p>
+    </div>
+    <nav aria-label="Seções"><h2 class="footer__h mono">Explorar</h2><ul>
+      <li><a href="#plataforma">Plataforma</a></li><li><a href="#funcionalidades">Funcionalidades</a></li><li><a href="#ia">Inteligência Artificial</a></li><li><a href="#dados">Dados</a></li><li><a href="#automacao">Automação</a></li><li><a href="#tecnologia">Tecnologia</a></li></ul></nav>
+    <nav aria-label="Links"><h2 class="footer__h mono">Projeto</h2><ul>
+      <li><a href="https://github.com/David-Evora/InfoFrota" target="_blank" rel="noopener">Repositório no GitHub</a></li>
+      <li><a href="https://github.com/David-Evora/InfoFrota/blob/main/docs/INFOFROTA_AI.md" target="_blank" rel="noopener">Documentação do InfoFrota AI</a></li>
+      <li><a href="https://github.com/David-Evora/InfoFrota/blob/main/LICENSE" target="_blank" rel="noopener">Licença MIT</a></li>
+      <li><a href="../">Protótipo da interface</a></li></ul></nav>
   </div>
-  <script src="assets/app.js"></script>
+  <div class="wrap footer__legal">
+    <p>© 2026 InfoFrota. Projeto independente; não é um sistema oficial da CETURB/ES. Dados exibidos neste site são sintéticos.</p>
+  </div>
+</footer>
+
+<dialog class="sheet" id="featureDialog" aria-labelledby="fdTitle">
+  <div class="sheet__panel">
+    <button class="iconbtn sheet__close" type="button" data-close aria-label="Fechar"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <div id="fdBody"></div>
+  </div>
+</dialog>
+
+<dialog class="sheet sheet--center" id="runDialog" aria-labelledby="runTitle">
+  <div class="sheet__panel">
+    <button class="iconbtn sheet__close" type="button" data-close aria-label="Fechar"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <p class="mono eyebrow-sm">Rodar localmente</p>
+    <h3 id="runTitle">Protótipo e este site</h3>
+    <p class="muted">Requer Python 3.11+. O modelo de linguagem só é necessário para perguntas ao vivo; sem ele, tudo o mais funciona.</p>
+    <div class="code" data-copy>
+      <button class="btn btn--ghost btn--sm code__copy" type="button" aria-label="Copiar comandos">Copiar</button>
+<pre class="mono"><code>git clone https://github.com/David-Evora/InfoFrota.git
+cd InfoFrota
+pip install -r requirements-api.txt
+python scripts/generate_data.py
+python -m infofrota_ai.api
+# interface:  http://127.0.0.1:8000/
+# este site:  http://127.0.0.1:8000/site/</code></pre>
+    </div>
+    <p class="muted">Ou só o site, sem API: <code>python -m http.server -d docs 8080</code> e abra <code>localhost:8080/site/</code>. Fora da API, a demonstração do assistente fica em modo simulado.</p>
+  </div>
+</dialog>
+
+<script src="assets/data/snapshot.js" defer></script>
+<script src="assets/js/features-data.js" defer></script>
+<script src="assets/js/core.js" defer></script>
+<script src="assets/js/ui.js" defer></script>
+<script src="assets/js/hero.js" defer></script>
+<script src="assets/js/intro.js" defer></script>
+<script src="assets/js/explorer.js" defer></script>
+<script src="assets/js/ai.js" defer></script>
+<script src="assets/js/dataviz.js" defer></script>
+<script src="assets/js/automation.js" defer></script>
+<script src="assets/js/architecture.js" defer></script>
+<script src="assets/js/showcase.js" defer></script>
 </body>
 </html>

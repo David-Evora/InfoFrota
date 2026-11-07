@@ -24,6 +24,7 @@ O InfoFrota é um projeto independente em desenvolvimento. Não é um sistema of
 | Banco operacional | Modelagem MySQL desenvolvida como base de projeto; não confundir com o SQLite experimental do módulo de IA |
 | Base experimental | SQLite gerado localmente com dados sintéticos |
 | Dashboard | MVP frontend em HTML, CSS e JavaScript; interface web servida pela API em `/`: ao vivo (resumo, alertas e assistente) com a API ativa, demonstração estática com dados ilustrativos sem ela |
+| Site de apresentação | `docs/site/`: página estática em HTML, CSS e JavaScript, em modo claro e escuro, com explorador de funcionalidades, demonstração simulada do assistente, gráficos sobre dados sintéticos e diagrama de arquitetura; servida em `/site/` (veja `docs/site/README.md`) |
 | InfoFrota AI | Assistente Python Text-to-SQL, com RAG de esquema e avaliação experimental |
 | API | FastAPI com `/saude`, `/perguntar`, `/alertas` e `/resumo` |
 | Automação | Workflow n8n de consulta de alertas críticos e envio de notificação por webhook |

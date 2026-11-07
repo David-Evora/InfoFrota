@@ -17,6 +17,7 @@ COPY infofrota_ai/ ./infofrota_ai/
 # Interface web, servida pela própria API em "/"
 COPY docs/index.html ./docs/index.html
 COPY docs/assets/ ./docs/assets/
+COPY docs/site/ ./docs/site/
 
 EXPOSE 8000
 
