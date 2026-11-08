@@ -5,21 +5,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copia os dois arquivos de dependências
+# Dependências da API
 COPY requirements.txt requirements-api.txt ./
-
-# Instala as dependências
 RUN pip install --no-cache-dir -r requirements-api.txt
 
-# Copia o código Python
+# Backend
 COPY infofrota_ai/ ./infofrota_ai/
 
-# Interface web, servida pela própria API em "/"
-COPY docs/index.html ./docs/index.html
-COPY docs/assets/ ./docs/assets/
+# Único frontend do projeto: site de apresentação
 COPY docs/site/ ./docs/site/
 
 EXPOSE 8000
 
-# Inicia o FastAPI
 CMD ["uvicorn", "infofrota_ai.api:app", "--host", "0.0.0.0", "--port", "8000"]

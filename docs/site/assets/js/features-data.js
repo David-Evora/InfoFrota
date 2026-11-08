@@ -60,7 +60,6 @@ window.IF_FEATURES = {
       detalhe: "Resultados de experimento com uma base sintética e 56 perguntas. Diferenças de um ou dois acertos são ruído, e os números não medem desempenho em operação real.",
       evidence: ["infofrota_ai/evaluate.py", "docs/experiments.md", "evaluation/questions.json"]
     },
-
     {
       id: "sqlite", cat: "dados", status: "exp", icon: "i-database",
       titulo: "Base experimental sintética",
@@ -79,10 +78,9 @@ window.IF_FEATURES = {
       id: "resumo", cat: "dados", status: "impl", icon: "i-activity",
       titulo: "Resumo diário por linha",
       resumo: "Endpoint com ocupação média, picos e contagem de alertas, com filtro por linha e tipo.",
-      detalhe: "Alimenta o painel do protótipo e é a base dos gráficos desta página.",
+      detalhe: "Alimenta a API e as visualizações do protótipo com dados sintéticos.",
       evidence: ["infofrota_ai/api.py", "tests/test_api.py"]
     },
-
     {
       id: "limiares", cat: "alertas", status: "impl", icon: "i-triangle-alert",
       titulo: "Alertas de lotação em dois níveis",
@@ -104,12 +102,11 @@ window.IF_FEATURES = {
       detalhe: "A URL do webhook é configurada na instância do n8n. Nenhuma URL real está no repositório.",
       evidence: ["n8n/alerta-critico.json"]
     },
-
     {
       id: "fastapi", cat: "api", status: "impl", icon: "i-server",
       titulo: "API FastAPI com quatro rotas",
       resumo: "Saúde, perguntar, alertas e resumo. O modelo só é carregado na primeira pergunta.",
-      detalhe: "Rotas: /saude, /perguntar, /alertas e /resumo. A interface do protótipo e este site são servidos pela própria API.",
+      detalhe: "Rotas: /saude, /perguntar, /alertas e /resumo. O único site do projeto é servido pela API na raiz.",
       evidence: ["infofrota_ai/api.py", "tests/test_api.py"]
     },
     {
@@ -126,7 +123,6 @@ window.IF_FEATURES = {
       detalhe: "Ambos são opcionais e configurados por variável de ambiente. Não substituem a revisão necessária antes de qualquer exposição pública.",
       evidence: ["infofrota_ai/api.py", "tests/test_api.py"]
     },
-
     {
       id: "guarda", cat: "seg", status: "impl", icon: "i-shield-check",
       titulo: "Guarda SQL somente leitura",
@@ -134,15 +130,13 @@ window.IF_FEATURES = {
       detalhe: "Há ainda limite de 200 linhas e de 5 segundos por consulta. Uma instrução como DELETE é barrada antes de tocar no banco.",
       evidence: ["infofrota_ai/db.py", "tests/test_core.py"]
     },
-
     {
       id: "web", cat: "plat", status: "impl", icon: "i-layout-dashboard",
-      titulo: "Interface web do protótipo",
-      resumo: "Painel com alertas, resumo e perguntas ao assistente, em modo ao vivo ou demonstração.",
-      detalhe: "HTML, CSS e JavaScript puros, sem build. Se a API não responde, a interface cai para o modo demonstração e avisa.",
-      evidence: ["docs/index.html"]
+      titulo: "Site de apresentação",
+      resumo: "Página institucional estática com catálogo de funcionalidades, demonstrações, visualizações e arquitetura interativa.",
+      detalhe: "Este é o único frontend do projeto. É servido pela API em / e pode ser publicado diretamente pelo GitHub Pages a partir de docs/site/.",
+      evidence: ["docs/site/index.html", "docs/site/assets/js/core.js", "docs/site/README.md", "tests/test_site.py"]
     },
-
     {
       id: "embarcada", cat: "plan", status: "plan", icon: "i-cpu",
       titulo: "Captação embarcada de passageiros",
