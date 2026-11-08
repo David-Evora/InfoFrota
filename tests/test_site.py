@@ -1,4 +1,5 @@
-"""Verificações estáticas do site em docs/site (sem navegador): links locais, ids usados pelo JS,
+"""Verificações estáticas do site em /
+docs (sem navegador): links locais, ids usados pelo JS,
 evidências do catálogo e ausência de dependências externas."""
 import json
 import os
