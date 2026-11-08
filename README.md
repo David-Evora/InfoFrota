@@ -132,6 +132,7 @@ Consulte:
 
 - Notebook no Kaggle (sem GPU, reproduz o banco sintético, o RAG, a guarda de SQL e o benchmark): https://www.kaggle.com/code/davidevora/notebook-portifolio-infofrota
 - Adaptador LoRA no Hugging Face (Llama 3.1 8B Instruct, Text-to-SQL em português): https://huggingface.co/David-Evora/infofrota-text2sql-lora
+- Artigo: https://dev.to/david_vora_61c0753239dfd/text-to-sql-em-portugues-com-rag-e-lora-o-que-aprendi-medindo-um-assistente-sobre-dados-sinteticos-46ha
 
 Os números dos dois são experimentais, sobre base sintética e 56 perguntas; não medem desempenho em operação real.
 
