@@ -2,7 +2,7 @@
 
 **Assistente experimental de Text-to-SQL para exploração de dados de transporte coletivo.** O módulo recebe perguntas em português, recupera contexto do esquema e das regras do domínio, gera consultas SQL com um modelo de linguagem, valida a consulta e executa leitura em SQLite.
 
-> **Estado — novembro de 2026:** núcleo Text-to-SQL, CLI, RAG de esquema e API FastAPI implementados. A API possui rotas para saúde, perguntas, alertas e resumo. A infraestrutura de desenvolvimento inclui Docker Compose e um workflow n8n para consulta periódica de alertas e notificação por webhook. A interface (`docs/index.html`) é servida pela API em `/`: com a API ativa, os indicadores, a tabela de linhas, os alertas e o assistente usam dados reais do banco sintético; sem ela (GitHub Pages, arquivo aberto direto), continua uma demonstração estática com dados fictícios. A captação embarcada e a operação com dados reais não estão implementadas.
+> **Estado — novembro de 2026:** núcleo Text-to-SQL, CLI, RAG de esquema e API FastAPI implementados. A API possui rotas para saúde, perguntas, alertas e resumo. A infraestrutura de desenvolvimento inclui Docker Compose e um workflow n8n para consulta periódica de alertas e notificação por webhook. O site (`docs/site/`) é servido pela API em `/`: com a API ativa, o assistente consulta o banco sintético de verdade; sem ela (arquivo aberto direto), o assistente roda em simulação com dados sintéticos gravados. A captação embarcada e a operação com dados reais não estão implementadas.
 
 ## 1. Componentes implementados
 

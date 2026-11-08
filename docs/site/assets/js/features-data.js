@@ -136,10 +136,10 @@ window.IF_FEATURES = {
 
     {
       id: "web", cat: "plat", status: "impl", icon: "i-layout-dashboard",
-      titulo: "Interface web do protótipo",
-      resumo: "Painel com alertas, resumo e perguntas ao assistente, em modo ao vivo ou demonstração.",
-      detalhe: "HTML, CSS e JavaScript puros, sem build. Se a API não responde, a interface cai para o modo demonstração e avisa.",
-      evidence: ["docs/index.html"]
+      titulo: "Site com demonstração do assistente",
+      resumo: "Esta página: explorador, gráficos sobre dados sintéticos e o assistente, em modo ao vivo ou simulação.",
+      detalhe: "HTML, CSS e JavaScript puros, sem build, servidos pela própria API na raiz. Se a API não responde, o assistente roda em simulação e a página avisa.",
+      evidence: ["docs/site/index.html", "docs/site/assets/js/core.js"]
     },
 
     {

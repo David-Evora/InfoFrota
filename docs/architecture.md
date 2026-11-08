@@ -41,7 +41,7 @@ A API é acessível pelo n8n na rede interna Docker. A porta 8000 é publicada a
 | Conectividade embarcada | Buffer local e sincronização após períodos offline | Requisito arquitetural; integração pendente |
 | Banco operacional | Modelagem MySQL para domínio operacional | Modelagem desenvolvida; não é o SQLite experimental |
 | Base experimental | SQLite com dados sintéticos | Gerada localmente para desenvolvimento e avaliação |
-| Dashboard | HTML, CSS e JavaScript | MVP estático; não consulta a API atualmente |
+| Site web | HTML, CSS e JavaScript (`docs/site/`) | Servido pela API; assistente ao vivo quando a API responde, simulação quando não |
 | InfoFrota AI | Text-to-SQL com RAG de esquema | Implementado em módulo experimental |
 | API | FastAPI com quatro rotas | Implementada e executada em Docker |
 | Automação | n8n consulta alertas críticos e notifica webhook | Workflow testado manualmente na instância; sem teste automatizado |

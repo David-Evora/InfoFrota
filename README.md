@@ -2,7 +2,7 @@
 
 **Plataforma em desenvolvimento para inteligência operacional do transporte coletivo na Grande Vitória (Transcol).** O InfoFrota propõe reunir dados de ocupação, frota, linhas, horários e fatores externos em uma visão integrada para apoiar o planejamento e a tomada de decisão.
 
-> **Estado do projeto — novembro de 2026:** o repositório reúne um MVP de interface web estática, uma base experimental SQLite com dados sintéticos, o módulo InfoFrota AI (Text-to-SQL com RAG de esquema), uma API FastAPI e uma integração de automação com n8n para consulta periódica de alertas e notificação via webhook (Discord/Slack). A infraestrutura de desenvolvimento pode ser executada com Docker Compose. A captação embarcada de passageiros e a operação com dados reais continuam em fase de estudo e validação.
+> **Estado do projeto — novembro de 2026:** o repositório reúne um site com interface web estática, uma base experimental SQLite com dados sintéticos, o módulo InfoFrota AI (Text-to-SQL com RAG de esquema), uma API FastAPI e uma integração de automação com n8n para consulta periódica de alertas e notificação via webhook (Discord/Slack). A infraestrutura de desenvolvimento pode ser executada com Docker Compose. A captação embarcada de passageiros e a operação com dados reais continuam em fase de estudo e validação.
 
 ## 1. Objetivo
 
@@ -23,8 +23,7 @@ O InfoFrota é um projeto independente em desenvolvimento. Não é um sistema of
 | Captação embarcada | Conceito em estudo; hardware, posicionamento, privacidade e precisão ainda precisam ser validados |
 | Banco operacional | Modelagem MySQL desenvolvida como base de projeto; não confundir com o SQLite experimental do módulo de IA |
 | Base experimental | SQLite gerado localmente com dados sintéticos |
-| Dashboard | MVP frontend em HTML, CSS e JavaScript; interface web servida pela API em `/`: ao vivo (resumo, alertas e assistente) com a API ativa, demonstração estática com dados ilustrativos sem ela |
-| Site de apresentação | `docs/site/`: página estática em HTML, CSS e JavaScript, em modo claro e escuro, com explorador de funcionalidades, demonstração simulada do assistente, gráficos sobre dados sintéticos e diagrama de arquitetura; servida em `/site/` (veja `docs/site/README.md`) |
+| Site e interface web | `docs/site/`: HTML, CSS e JavaScript puros, tema claro e escuro, explorador de funcionalidades, gráficos sobre dados sintéticos, fluxo do n8n e diagrama de arquitetura. Servido pela API em `/`: o assistente roda ao vivo com a API ativa e em simulação sem ela (veja `docs/site/README.md`) |
 | InfoFrota AI | Assistente Python Text-to-SQL, com RAG de esquema e avaliação experimental |
 | API | FastAPI com `/saude`, `/perguntar`, `/alertas` e `/resumo` |
 | Automação | Workflow n8n de consulta de alertas críticos e envio de notificação por webhook |
@@ -128,6 +127,13 @@ Consulte:
 - [`docs/architecture-infofrota-ai.md`](docs/architecture-infofrota-ai.md)
 - [`docs/experiments.md`](docs/experiments.md)
 - [`training/REPORT.md`](training/REPORT.md)
+
+### Links do portfólio
+
+- Notebook no Kaggle (sem GPU, reproduz o banco sintético, o RAG, a guarda de SQL e o benchmark): https://www.kaggle.com/code/davidevora/notebook-portifolio-infofrota
+- Adaptador LoRA no Hugging Face (Llama 3.1 8B Instruct, Text-to-SQL em português): https://huggingface.co/David-Evora/infofrota-text2sql-lora
+
+Os números dos dois são experimentais, sobre base sintética e 56 perguntas; não medem desempenho em operação real.
 
 ## 7. Dados e limitações
 

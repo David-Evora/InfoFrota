@@ -7,7 +7,7 @@
   <meta name="description" content="Conheça o InfoFrota, um projeto de tecnologia voltado à inteligência de dados, processamento de informações e automação para frotas de transporte coletivo.">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#0B1220">
-  <meta name="infofrota-api" content="../">
+  <meta name="infofrota-api" content="./">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:title" content="InfoFrota — Inteligência e tecnologia para frotas">
@@ -406,8 +406,8 @@
     <div class="wrap">
       <header class="sec-head">
         <p class="eyebrow reveal"><span class="idx">07</span>Protótipo</p>
-        <h2 class="h2 reveal" id="show-title">A interface que <em>já roda</em>.</h2>
-        <p class="lead reveal">Capturas reais do protótipo em <code>docs/index.html</code>, servido pela própria API. É um protótipo com dados sintéticos, não um produto em operação.</p>
+        <h2 class="h2 reveal" id="show-title">A interface <em>que já rodou</em>.</h2>
+        <p class="lead reveal">Capturas da primeira versão do painel do protótipo, hoje substituída por este site. Os dados são sintéticos; não é um produto em operação.</p>
       </header>
       <div class="device reveal">
         <div class="device__bar">
@@ -495,10 +495,9 @@ cd InfoFrota
 pip install -r requirements-api.txt
 python scripts/generate_data.py
 python -m infofrota_ai.api
-# interface:  http://127.0.0.1:8000/
-# este site:  http://127.0.0.1:8000/site/</code></pre>
+# site e assistente:  http://127.0.0.1:8000/</code></pre>
     </div>
-    <p class="muted">Ou só o site, sem API: <code>python -m http.server -d docs 8080</code> e abra <code>localhost:8080/site/</code>. Fora da API, a demonstração do assistente fica em modo simulado.</p>
+    <p class="muted">Ou só o site, sem API: <code>python -m http.server -d docs/site 8080</code> e abra <code>localhost:8080/</code>. Fora da API, a demonstração do assistente fica em modo simulado.</p>
   </div>
 </dialog>
 

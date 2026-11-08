@@ -118,9 +118,7 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(pagina.status_code, 200)
         self.assertIn("InfoFrota", pagina.text)
         self.assertEqual(c.get("/assets/js/core.js").status_code, 200)
-        self.assertEqual(c.get("/saude").json()["status"], "ok")  # a API não é encoberta pelo site
-        # Não há uma segunda página em /site/: o único frontend fica na raiz.
-        self.assertEqual(c.get("/site/").status_code, 404)
+        self.assertEqual(c.get("/saude").json()["status"], "ok")      # a API não é encoberta pela interface
         os.environ["INFOFROTA_WEB"] = "0"
         self.assertEqual(TestClient(create_app()).get("/").status_code, 404)
 

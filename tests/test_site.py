@@ -91,7 +91,7 @@ class SiteTest(unittest.TestCase):
     @unittest.skipUnless(TEM_FASTAPI, "fastapi não instalado")
     def test_servido_pela_api(self):
         os.environ.pop("INFOFROTA_WEB", None)
-        r = TestClient(create_app()).get("/site/")
+        r = TestClient(create_app()).get("/")
         self.assertEqual(r.status_code, 200)
         self.assertIn("InfoFrota", r.text)
 

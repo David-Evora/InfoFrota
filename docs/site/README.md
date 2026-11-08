@@ -4,15 +4,15 @@ Página de apresentação do projeto, em HTML, CSS e JavaScript puros. Não há 
 
 ## Como rodar
 
-Com a API (serve em `/site/`):
+Com a API (serve o site na raiz):
 
     uvicorn infofrota_ai.api:create_app --factory --port 8000
-    # abra http://127.0.0.1:8000/site/
+    # abra http://127.0.0.1:8000/
 
 Só o site, sem Python além do servidor estático:
 
-    python -m http.server -d docs 8080
-    # abra http://127.0.0.1:8080/site/
+    python -m http.server -d docs/site 8080
+    # abra http://127.0.0.1:8080/
 
 Abrir `docs/site/index.html` direto no navegador (file://) também funciona; nesse caso o modo ao vivo fica desligado.
 
@@ -22,7 +22,7 @@ Abrir `docs/site/index.html` direto no navegador (file://) também funciona; nes
 - `assets/css/`: `tokens.css` (cores, tipografia, espaço, tema claro e escuro), `base.css`, `components.css`, `sections.css`.
 - `assets/js/`: `core.js` (helpers e camada de serviço da API), `ui.js` (tema, navegação, revelação), um arquivo por seção (`hero`, `intro`, `explorer`, `ai`, `dataviz`, `automation`, `architecture`, `showcase`) e `features-data.js` (catálogo de funcionalidades).
 - `assets/data/snapshot.js`: instantâneo gerado por `scripts/build_site_snapshot.py` a partir do banco sintético. Para atualizar: `python scripts/generate_data.py && python scripts/build_site_snapshot.py`.
-- `assets/img/`: favicon, imagem Open Graph e capturas do painel em `docs/index.html` (tiradas com dados sintéticos e um simulador no lugar do modelo).
+- `assets/img/`: favicon, imagem Open Graph e capturas da primeira versão do painel, já substituída por este site (tiradas com dados sintéticos e um simulador no lugar do modelo).
 - `assets/NOTICE.md`: licenças das fontes (Geist, Instrument Serif) e dos ícones (Lucide).
 
 Os ícones são um subconjunto de Lucide embutido em `index.html`. Ao usar um ícone novo, acrescente o `<symbol>` correspondente ao sprite; `tests/test_site.py` avisa quando falta algum.
