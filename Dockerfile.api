@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 COPY infofrota_ai/ ./infofrota_ai/
 
 # Interface web, servida pela própria API em "/"
-COPY docs/site/index.html ./docs/index.html
+COPY docs/index.html ./docs/index.html
 COPY docs/assets/ ./docs/assets/
 COPY docs/site/ ./docs/site/
 

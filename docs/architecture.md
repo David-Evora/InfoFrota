@@ -44,7 +44,7 @@ A API é acessível pelo n8n na rede interna Docker. A porta 8000 é publicada a
 | Dashboard | HTML, CSS e JavaScript | MVP estático; não consulta a API atualmente |
 | InfoFrota AI | Text-to-SQL com RAG de esquema | Implementado em módulo experimental |
 | API | FastAPI com quatro rotas | Implementada e executada em Docker |
-| Automação | n8n consulta alertas críticos e notifica webhook | Workflow desenvolvido; validar na instância após importação/atualizações |
+| Automação | n8n consulta alertas críticos e notifica webhook | Workflow testado manualmente na instância; sem teste automatizado |
 | Operação real | Sensores, dados operacionais e sistemas externos | Não implementada nem validada |
 
 ## 3. Diferença entre os bancos

@@ -1,8 +1,5 @@
-"""Verificações estáticas do único site do InfoFrota, publicado em /.
-
-Confere referências locais, IDs usados pelo JavaScript, evidências do catálogo,
-metadados básicos e a publicação pela API.
-"""
+"""Verificações estáticas do site em docs/site (sem navegador): links locais, ids usados pelo JS,
+evidências do catálogo e ausência de dependências externas."""
 import json
 import os
 import re
@@ -38,12 +35,10 @@ class SiteTest(unittest.TestCase):
     def test_ids_usados_pelo_js_existem(self):
         ids = set(re.findall(r'id="([^"]+)"', HTML))
         for nome, txt in JS.items():
-            encontrados = re.findall(r'\$\("#([A-Za-z0-9_-]+)"\)', txt)
-            encontrados += re.findall(r'getElementById\("([^\"]+)"\)', txt)
-            for ident in encontrados:
-                if nome == "ai.js" and ident.startswith("scen"):
-                    continue  # abas criadas dinamicamente
-                self.assertIn(ident, ids, f"{nome} usa #{ident}, que não existe no HTML")
+            for i in re.findall(r'\$\("#([A-Za-z0-9_-]+)"\)', txt) + re.findall(r'getElementById\("([^"]+)"\)', txt):
+                if nome == "ai.js" and i.startswith("scen"):
+                    continue          # abas criadas dinamicamente
+                self.assertIn(i, ids, f"{nome} usa #{i}, que não existe no HTML")
 
     def test_icones_do_sprite(self):
         sprite = set(re.findall(r'<symbol id="(i-[a-z0-9-]+)"', HTML))
@@ -56,17 +51,17 @@ class SiteTest(unittest.TestCase):
         for bloco in re.findall(r"(?:evidence|f): \[([^\]]*)\]", txt):
             caminhos |= set(re.findall(r'"([^"]+)"', bloco))
         self.assertGreater(len(caminhos), 10)
-        for caminho in caminhos:
-            self.assertTrue((RAIZ / caminho).exists(), f"evidência inexistente no repositório: {caminho}")
+        for c in caminhos:
+            self.assertTrue((RAIZ / c).exists(), f"evidência inexistente no repositório: {c}")
 
     def test_catalogo_estrutura(self):
         txt = JS["features-data.js"]
         status = set(re.findall(r'status: "(\w+)"', txt))
         self.assertLessEqual(status, {"impl", "exp", "val", "plan"})
-        self.assertIn("plan", status)
+        self.assertIn("plan", status)                       # o que não existe aparece como planejado
         cats = set(re.findall(r'\{ id: "(\w+)", nome:', txt))
-        for categoria in re.findall(r'cat: "(\w+)"', txt):
-            self.assertIn(categoria, cats)
+        for c in re.findall(r'cat: "(\w+)"', txt):
+            self.assertIn(c, cats)
 
     def test_snapshot_valido_e_sintetico(self):
         txt = (SITE / "assets/data/snapshot.js").read_text(encoding="utf-8")
@@ -94,11 +89,11 @@ class SiteTest(unittest.TestCase):
             self.assertIn("alt=", tag)
 
     @unittest.skipUnless(TEM_FASTAPI, "fastapi não instalado")
-    def test_servido_pela_api_na_raiz(self):
+    def test_servido_pela_api(self):
         os.environ.pop("INFOFROTA_WEB", None)
-        resposta = TestClient(create_app()).get("/")
-        self.assertEqual(resposta.status_code, 200)
-        self.assertIn("InfoFrota", resposta.text)
+        r = TestClient(create_app()).get("/site/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("InfoFrota", r.text)
 
 
 if __name__ == "__main__":

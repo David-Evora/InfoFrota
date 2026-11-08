@@ -20,7 +20,7 @@
     { t: "Há alertas?", s: "IF", i: "i-git-branch",
       d: "Só segue adiante se a resposta trouxer pelo menos um alerta.", c: "$json.total > 0", o: "total = " + crit.length + " > 0 → segue" },
     { t: "Filtrar novos", s: "Code", i: "i-filter",
-      d: "Compara os IDs com o histórico guardado no static data do workflow e descarta o que já foi enviado. Esse histórico só persiste com o workflow ativo, e essa persistência ainda precisa ser validada.", c: "static data: alertasCriticosEnviados\nnovos = alertas.filter(id não enviado)", o: "já enviado: " + crit[0].id + "\nnovos: " + novos.map(function (a) { return a.id; }).join(", ") },
+      d: "Compara os IDs com o histórico guardado no static data do workflow e descarta o que já foi enviado. Esse histórico só persiste com o workflow ativo.", c: "static data: alertasCriticosEnviados\nnovos = alertas.filter(id não enviado)", o: "já enviado: " + crit[0].id + "\nnovos: " + novos.map(function (a) { return a.id; }).join(", ") },
     { t: "Montar mensagem", s: "Code", i: "i-file-code-2",
       d: "Agrupa os novos alertas em uma única mensagem de texto.", c: "texto = N alerta(s) + janela + linhas + aviso de dados sintéticos", o: "mensagem com " + novos.length + " linha(s)" },
     { t: "Enviar notificação", s: "HTTP Request", i: "i-webhook",
@@ -48,7 +48,7 @@
       el("p", { class: "eyebrow-sm mono", text: "Nó " + (i + 1) + " de " + NODES.length + " · " + n.s }),
       el("h3", { text: n.t }),
       el("p", { text: n.d }),
-      i === 4 || i === 7 ? el("span", { class: "badge badge--val", style: { "margin-top": "12px" }, text: "Persistência em validação" }) : null
+      null
     ]));
     insp.appendChild(el("div", null, [
       el("pre", { class: "sqlblock", text: n.c }),

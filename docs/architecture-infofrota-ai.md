@@ -45,7 +45,6 @@ O Compose atual publica a interface do n8n em localhost e mantém a API sem port
 - Captação real de passageiros por câmera/sensor.
 - Conectividade embarcada e sincronização offline.
 - Integração com dados operacionais autorizados.
-- Integração do dashboard estático à API.
 - Autenticação/autorização e hardening completos para produção.
 - Validação de desempenho e segurança em ambiente operacional real.
 

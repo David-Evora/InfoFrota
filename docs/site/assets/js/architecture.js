@@ -15,15 +15,15 @@
     rag: { row: "B", t: "RAG de esquema (BM25)", s: "infofrota_ai/rag.py", i: "i-search", st: "impl", layer: "Núcleo",
       d: "Recupera as tabelas, os valores válidos e as regras que importam para a pergunta e as entrega ao prompt.", f: ["infofrota_ai/rag.py", "tests/test_rag.py"] },
     api: { row: "B", t: "API FastAPI", s: "infofrota_ai/api.py", i: "i-server", st: "impl", layer: "Núcleo",
-      d: "Rotas /saude, /perguntar, /alertas e /resumo, com chave opcional (X-API-Key), limite por IP e CORS opcional. Serve também o único site do projeto na raiz.", f: ["infofrota_ai/api.py", "tests/test_api.py"] },
+      d: "Rotas /saude, /perguntar, /alertas e /resumo, com chave opcional (X-API-Key), limite por IP e CORS opcional. Serve também esta página e o painel.", f: ["infofrota_ai/api.py", "tests/test_api.py"] },
     llm: { row: "B", t: "Provedor de LLM", s: "infofrota_ai/llm.py", i: "i-bot", st: "impl", layer: "Núcleo",
       d: "Anthropic, API compatível com OpenAI (como a Groq) ou modelo local com Hugging Face e PEFT. A chave fica no backend.", f: ["infofrota_ai/llm.py", "infofrota_ai/hf_llm.py"] },
-    n8n: { row: "C", t: "Workflow n8n", s: "n8n/alerta-critico.json", i: "i-workflow", st: "val", layer: "Consumo e automação",
-      d: "A cada cinco minutos busca alertas críticos na API e avisa só os novos. A persistência da deduplicação ainda está em validação.", f: ["n8n/alerta-critico.json", "compose.yaml"] },
+    n8n: { row: "C", t: "Workflow n8n", s: "n8n/alerta-critico.json", i: "i-workflow", st: "impl", layer: "Consumo e automação",
+      d: "A cada cinco minutos busca alertas críticos na API e avisa só os novos. Testado manualmente pelo autor, sem teste automatizado.", f: ["n8n/alerta-critico.json", "compose.yaml"] },
     hook: { row: "C", t: "Webhook Discord ou Slack", s: "configurado no n8n", i: "i-webhook", st: "impl", layer: "Consumo e automação",
       d: "Destino da notificação. A URL é configurada na instância do n8n e não está no repositório.", f: ["n8n/alerta-critico.json"] },
-    ui: { row: "C", t: "Site de apresentação", s: "docs/site/index.html", i: "i-layout-dashboard", st: "impl", layer: "Consumo e automação",
-      d: "Único frontend do projeto: página estática com demonstrações e arquitetura interativa, servida em / pela API e publicada pelo GitHub Pages.", f: ["docs/site/index.html", "docs/site/assets/js/core.js", "docs/site/README.md"] },
+    ui: { row: "C", t: "Painel web", s: "docs/index.html", i: "i-layout-dashboard", st: "impl", layer: "Consumo e automação",
+      d: "Protótipo em HTML, CSS e JavaScript puros. Conversa com a API quando ela responde e cai para o modo demonstração quando não.", f: ["docs/index.html", "docs/assets/app.js"] },
     emb: { row: "D", t: "Captação embarcada", s: "conceito", i: "i-cpu", st: "plan", layer: "Em estudo", ghost: true,
       d: "Ideia de estimar a ocupação dentro do veículo por visão computacional. Sem firmware, modelo ou hardware neste repositório.", f: ["docs/architecture.md"] },
     real: { row: "D", t: "Dados operacionais reais", s: "depende de autorização", i: "i-globe", st: "plan", layer: "Em estudo", ghost: true,
@@ -60,7 +60,7 @@
       if (sameRow) {
         var left = a.cx < b.cx ? a : b, right = left === a ? b : a, gap = right.l - left.r;
         if (gap < 120) d = "M" + left.r + "," + left.cy + "L" + right.l + "," + right.cy;
-        else d = "M" + a.cx + "," + a.b + "C" + a.cx + "," + (a.b + 26) + " " + b.cx + "," + (b.b + 26) + " " + b.cx + "," + b.b;
+        else d = "M" + a.cx + "," + a.b + "C" + a.cx + "," + (a.b + 26) + " " + b.cx + "," + (b.b + 26) + " " + b.cx + "," + b.b;   // contorna os nós do meio por baixo
       } else {
         var down = b.cy > a.cy, y1 = down ? a.b : a.t, y2 = down ? b.t : b.b, m = (y1 + y2) / 2;
         d = "M" + a.cx + "," + y1 + "C" + a.cx + "," + m + " " + b.cx + "," + m + " " + b.cx + "," + y2;
