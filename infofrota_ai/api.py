@@ -39,7 +39,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import prompts
-from .agente import Agente
+from .agente import Agente, ComEspera, LimiteDiario
 from .assistant import Assistente
 from .db import DB_PATH, conectar
 from .llm import llm_do_ambiente
@@ -94,7 +94,7 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None, agente: Op
     def agente_pronto() -> Agente:
         if estado["agente"] is None:
             try:
-                estado["agente"] = Agente(llm_do_ambiente(), db_path=db_path,
+                estado["agente"] = Agente(ComEspera(llm_do_ambiente()), db_path=db_path,
                                           max_passos=int(os.environ.get("INFOFROTA_AGENTE_PASSOS", "8")))
             except Exception as e:
                 raise HTTPException(503, f"modelo não configurado: {e}")
@@ -132,6 +132,8 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None, agente: Op
         try:
             with estado["lock"]:
                 resp = bot.perguntar(corpo.pergunta.strip())
+        except LimiteDiario:
+            raise HTTPException(429, "cota diária do provedor de modelo esgotada; tente novamente mais tarde")
         except Exception as e:
             raise HTTPException(502, f"falha ao consultar o modelo: {e}")
         return asdict(resp)

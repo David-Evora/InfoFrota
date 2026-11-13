@@ -33,3 +33,18 @@ A base atual usa dados sintéticos. A rota `/alertas` usa por padrão o horário
 - O campo `api_key` é opcional e corresponde somente a `INFOFROTA_API_KEY`.
 - Não versione URL de webhook do Discord/Slack.
 - A API deve permanecer em rede privada até que autenticação, TLS e controles de acesso apropriados sejam definidos.
+
+## Perguntar ao agente (`perguntar-agente.json`)
+
+Segundo workflow: recebe uma pergunta por webhook, chama `POST http://api:8000/agente` e devolve a resposta e os passos do agente. O n8n só orquestra; o agente roda na API e a chave do provedor LLM continua apenas no `.env.api`.
+
+1. Importe `perguntar-agente.json` como no passo anterior e confirme `api_base_url` no nó **Configuração**.
+2. Clique em **Execute workflow** e, em outro terminal, chame a URL de teste que o nó webhook mostra:
+   ```powershell
+   $corpo = [System.Text.Encoding]::UTF8.GetBytes('{"pergunta":"Qual linha tem mais alertas críticos e em que hora?"}')
+   Invoke-RestMethod -Method Post -Uri "http://localhost:5678/webhook-test/infofrota-agente" -ContentType "application/json; charset=utf-8" -Body $corpo
+   ```
+   (No PowerShell 5.1 o corpo precisa ir em bytes UTF-8, senão os acentos chegam quebrados.)
+3. Para usar a URL fixa `/webhook/infofrota-agente`, ative o workflow.
+
+A chamada pode levar de segundos a minutos (limite de tokens do provedor); o nó HTTP espera até 180 s. Este workflow não usa o nó AI Agent do n8n, porque ele exigiria uma credencial do provedor LLM dentro do n8n.

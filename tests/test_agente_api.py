@@ -9,7 +9,8 @@ try:
 except ImportError:
     TEM_FASTAPI = False
 
-from infofrota_ai.agente import Agente
+from infofrota_ai.agente import Agente, LimiteDiario
+from infofrota_ai.llm import LLMErro
 
 
 class Roteiro:
@@ -51,6 +52,10 @@ class AgenteApiTest(unittest.TestCase):
     def test_falha_do_modelo_vira_502(self):
         r = self.cliente([RuntimeError("fora do ar")]).post("/agente", json={"pergunta": "Quantas linhas?"})
         self.assertEqual(r.status_code, 502)
+
+    def test_cota_diaria_vira_429(self):
+        r = self.cliente([LimiteDiario("HTTP 429 tokens per day (TPD)")]).post("/agente", json={"pergunta": "Quantas linhas?"})
+        self.assertEqual(r.status_code, 429)
 
     def test_chave_de_api(self):
         os.environ["INFOFROTA_API_KEY"] = "segredo"

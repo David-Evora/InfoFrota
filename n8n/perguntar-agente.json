@@ -1,0 +1,179 @@
+{
+  "name": "InfoFrota - perguntar ao agente",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "infofrota-agente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c4e7f158-9398-49ef-bbb0-7ce237c02f36",
+      "name": "Pergunta (webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        912,
+        192
+      ],
+      "webhookId": "infofrota-agente"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "api_base_url",
+              "value": "http://api:8000",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "api_key",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4dbf7886-894e-4af9-bdf6-9592c9bc35ba",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuração').item.json.api_base_url }}/agente",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $('Configuração').item.json.api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pergunta: $('Pergunta (webhook)').item.json.body.pergunta }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "8864aac4-0b69-443b-b8ef-4164b379f424",
+      "name": "Chamar agente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst passos = (r.passos || []).map(p => ({ ferramenta: p.ferramenta, entrada: p.entrada }));\nreturn [{ json: { resposta: r.texto || null, erro: r.erro || null, consultas: passos.length, passos, nota: r.nota } }];"
+      },
+      "id": "9386da55-3b32-4012-a8ab-aff4f35fd1b0",
+      "name": "Montar resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c79b615b-78d8-4560-97e6-c2848fb2df31",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "content": "POST /webhook/infofrota-agente com {\"pergunta\": \"...\"}.\nO n8n só orquestra: o agente (Tool Calling, SQL somente leitura) roda na API do InfoFrota; a chave do provedor LLM fica no backend, nunca aqui. Dados sintéticos.",
+        "width": 700
+      },
+      "id": "bcf67b50-e654-434b-98e9-396fd2ad520a",
+      "name": "Sobre este fluxo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -32
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Pergunta (webhook)": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Chamar agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar agente": {
+      "main": [
+        [
+          {
+            "node": "Montar resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar resposta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "078ae8f8-d5b2-4d46-a65c-128f41c398c9",
+  "meta": {
+    "instanceId": "b2ca89e09e649c6861ac78d0aa15bfd2648cc1d89ab6784a4c16763f8986c5d5"
+  },
+  "nodeGroups": [],
+  "id": "uC1QTAHZCHfOm7PM",
+  "tags": []
+}
