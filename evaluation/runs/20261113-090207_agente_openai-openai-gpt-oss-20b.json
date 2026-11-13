@@ -1,0 +1,158 @@
+{
+ "modelo": "openai-openai/gpt-oss-20b",
+ "resumo": {
+  "n": 3,
+  "acertos_unico": 1,
+  "acertos_agente": 2,
+  "consultas_medias_agente": 1.33,
+  "chamadas_medias_agente": 5.67,
+  "chamadas_medias_unico": 1.33
+ },
+ "resultados": [
+  {
+   "id": "M01",
+   "pergunta": "Qual linha tem mais alertas críticos e em que hora do dia esses alertas mais acontecem nessa linha?",
+   "esperado": [
+    "562",
+    "17|17h|17:00"
+   ],
+   "ok_unico": false,
+   "texto_unico": null,
+   "sql_unico": null,
+   "chamadas_unico": 1,
+   "ok_agente": true,
+   "texto_agente": "A linha 562 tem mais alertas críticos, totalizando 133. O pico de alertas críticos ocorre às 17:00, com 36 ocorrências.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.id, l.numero, COUNT(*) AS total_criticos FROM alertas a JOIN linhas l ON a.linha_id = l.id WHERE a.tipo = 'CRITICO' GROUP BY l.id ORDER BY total_criticos DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"id\", \"numero\", \"total_criticos\"], \"linhas\": [[72, \"562\", 133]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "(chamada de função rejeitada)",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT strftime('%H:00', a.criado_em) AS hora, COUNT(*) AS total_criticos FROM alertas a WHERE a.linha_id = 72 AND a.tipo = 'CRITICO' GROUP BY hora ORDER BY total_criticos DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"hora\", \"total_criticos\"], \"linhas\": [[\"17:00\", 36]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "A linha 562 tem mais alertas críticos, totalizando 133. O pico de alertas críticos ocorre às 17:00, com 36 ocorrências.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 2,
+   "chamadas_agente": 4,
+   "segundos": 25.2
+  },
+  {
+   "id": "M02",
+   "pergunta": "Qual a linha com maior lotação média no período e qual parada concentra mais alertas críticos nela?",
+   "esperado": [
+    "562",
+    "Reta da Penha"
+   ],
+   "ok_unico": false,
+   "texto_unico": null,
+   "sql_unico": null,
+   "chamadas_unico": 1,
+   "ok_agente": false,
+   "texto_agente": "Não é possível determinar a linha com maior lotação média nem a parada com mais alertas críticos sem consultar os dados.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": null,
+     "entrada": "",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "(chamada de função rejeitada)",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "(chamada de função rejeitada)",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "Não é possível determinar a linha com maior lotação média nem a parada com mais alertas críticos sem consultar os dados.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 0,
+   "chamadas_agente": 7,
+   "segundos": 120.8
+  },
+  {
+   "id": "M03",
+   "pergunta": "Qual dia da semana concentra mais alertas críticos e qual linha lidera nesse dia da semana?",
+   "esperado": [
+    "sexta",
+    "591"
+   ],
+   "ok_unico": true,
+   "texto_unico": "O dia da semana que concentra mais alertas críticos é sexta-feira, com 38 alertas críticos. A linha que lidera nesse dia é a linha 591, chamada SERRA / T. CAMPO GRANDE VIA RETA DA PENHA / BR 262.",
+   "sql_unico": "WITH crit_per_day AS (\n  SELECT c.dia_semana, COUNT(*) AS total_crit\n  FROM alertas a\n  JOIN calendario c ON date(a.criado_em) = c.data\n  WHERE a.tipo = 'CRITICO'\n  GROUP BY c.dia_semana\n),\nmax_day AS (\n  SELECT dia_semana\n  FROM crit_per_day\n  ORDER BY total_crit DESC\n  LIMIT 1\n),\ncrit_per_day_line AS (\n  SELECT c.dia_semana, l.id AS linha_id, l.numero AS linha_numero, l.nome AS linha_nome, COUNT(*) AS total_crit\n  FROM alertas a\n  JOIN calendario c ON date(a.criado_em) = c.data\n  JOIN linhas l ON a.linha_id = l.id\n  WHERE a.tipo = 'CRITICO'\n  GROUP BY c.dia_semana, l.id\n),\nmax_line AS (\n  SELECT dia_semana, linha_id, linha_numero, linha_nome, total_crit\n  FROM crit_per_day_line\n  WHERE dia_semana = (SELECT dia_semana FROM max_day)\n  ORDER BY total_crit DESC\n  LIMIT 1\n)\nSELECT m.dia_semana AS dia_da_semana, l.linha_numero, l.linha_nome, l.total_crit\nFROM max_day m\nJOIN max_line l ON l.dia_semana = m.dia_semana",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "O dia da semana com mais alertas críticos é sexta-feira, com 154 alertas. A linha que lidera nesse dia é a 591, com 38 alertas críticos.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": null,
+     "entrada": "",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT calendario.dia_semana, COUNT(*) AS total_criticos\nFROM alertas\nJOIN calendario ON alertas.criado_em LIKE calendario.data || '%'\nWHERE alertas.tipo='CRITICO'\nGROUP BY calendario.dia_semana\nORDER BY total_criticos DESC\nLIMIT 1;",
+     "observacao": "{\"colunas\": [\"dia_semana\", \"total_criticos\"], \"linhas\": [[\"sexta\", 154]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "(chamada de função rejeitada)",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": null,
+     "entrada": "(chamada de função rejeitada)",
+     "observacao": "Formato inválido (não use tool calling). Responda SOMENTE com um objeto JSON, sem texto fora dele:\n{\"pensamento\": \"<uma frase curta>\", \"ferramenta\": \"esquema|sql|responder\", \"entrada\": \"<texto>\"}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.numero, COUNT(*) AS total_criticos\nFROM alertas a\nJOIN linhas l ON a.linha_id = l.id\nJOIN calendario c ON a.criado_em LIKE c.data || '%'\nWHERE a.tipo='CRITICO' AND c.dia_semana='sexta'\nGROUP BY l.numero\nORDER BY total_criticos DESC\nLIMIT 1;",
+     "observacao": "{\"colunas\": [\"numero\", \"total_criticos\"], \"linhas\": [[\"591\", 38]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "O dia da semana com mais alertas críticos é sexta-feira, com 154 alertas. A linha que lidera nesse dia é a 591, com 38 alertas críticos.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 2,
+   "chamadas_agente": 6,
+   "segundos": 97.3
+  }
+ ]
+}

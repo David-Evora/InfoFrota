@@ -1,0 +1,158 @@
+[
+ {
+  "id": "M01",
+  "pergunta": "Qual linha tem mais alertas críticos e em que hora do dia esses alertas mais acontecem nessa linha?",
+  "passos_ref": [
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT strftime('%H', a.criado_em), COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND l.numero = '562' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "562",
+   "17|17h|17:00"
+  ]
+ },
+ {
+  "id": "M02",
+  "pergunta": "Qual a linha com maior lotação média no período e qual parada concentra mais alertas críticos nela?",
+  "passos_ref": [
+   "SELECT l.numero, ROUND(AVG(d.media_percentual), 2) FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT p.nome, COUNT(*) FROM alertas a JOIN paradas p ON p.id = a.parada_id JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND l.numero = '562' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "562",
+   "Reta da Penha"
+  ]
+ },
+ {
+  "id": "M03",
+  "pergunta": "Qual dia da semana concentra mais alertas críticos e qual linha lidera nesse dia da semana?",
+  "passos_ref": [
+   "SELECT c.dia_semana, COUNT(*) FROM alertas a JOIN calendario c ON c.data = date(a.criado_em) WHERE a.tipo = 'CRITICO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN calendario c ON c.data = date(a.criado_em) JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND c.dia_semana = 'sexta' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "sexta",
+   "591"
+  ]
+ },
+ {
+  "id": "M04",
+  "pergunta": "Em qual hora do dia a lotação média das linhas monitoradas é mais alta e qual linha tem mais alertas críticos nessa hora?",
+  "passos_ref": [
+   "SELECT strftime('%H', data_hora), ROUND(AVG(media_percentual), 2) FROM resumos_hora WHERE parada_id IS NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND strftime('%H', a.criado_em) = '07' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "07|7h|7:00|07h|07:00",
+   "562"
+  ]
+ },
+ {
+  "id": "M05",
+  "pergunta": "Qual município concentra mais alertas críticos e qual linha mais contribui para ele?",
+  "passos_ref": [
+   "SELECT p.municipio, COUNT(*) FROM alertas a JOIN paradas p ON p.id = a.parada_id WHERE a.tipo = 'CRITICO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN paradas p ON p.id = a.parada_id JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND p.municipio = 'Vitória' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "Vitória",
+   "591"
+  ]
+ },
+ {
+  "id": "M06",
+  "pergunta": "Qual linha tem mais alertas de atenção e quantos ônibus diferentes já fizeram viagens nela?",
+  "passos_ref": [
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'ATENCAO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT COUNT(DISTINCT v.onibus_id) FROM viagens v JOIN linhas l ON l.id = v.linha_id WHERE l.numero = '562'"
+  ],
+  "esperado": [
+   "562",
+   "6"
+  ]
+ },
+ {
+  "id": "M07",
+  "pergunta": "Qual linha teve mais viagens canceladas e quantos alertas críticos ela teve no período?",
+  "passos_ref": [
+   "SELECT l.numero, COUNT(*) FROM viagens v JOIN linhas l ON l.id = v.linha_id WHERE v.status = 'cancelada' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND l.numero = '536'"
+  ],
+  "esperado": [
+   "536",
+   "63"
+  ]
+ },
+ {
+  "id": "M08",
+  "pergunta": "Quais placas de ônibus em manutenção têm como linha padrão a linha com mais alertas críticos?",
+  "passos_ref": [
+   "SELECT o.placa FROM onibus o JOIN linhas l ON l.id = o.linha_padrao_id WHERE o.status = 'manutencao' AND l.numero = (SELECT l2.numero FROM alertas a2 JOIN linhas l2 ON l2.id = a2.linha_id WHERE a2.tipo = 'CRITICO' GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 1)"
+  ],
+  "esperado": [
+   "SIN-0049"
+  ]
+ },
+ {
+  "id": "M09",
+  "pergunta": "No dia com mais alertas críticos, qual foi a data, qual foi o dia da semana e qual linha liderou?",
+  "passos_ref": [
+   "SELECT date(criado_em), COUNT(*) FROM alertas WHERE tipo = 'CRITICO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+   "SELECT c.dia_semana FROM calendario c WHERE c.data = '2026-10-09'",
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND date(a.criado_em) = '2026-10-09' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "2026-10-09|09/10|9 de outubro",
+   "sexta",
+   "591"
+  ]
+ },
+ {
+  "id": "M10",
+  "pergunta": "Qual parada tem mais alertas críticos no total e em quantas linhas diferentes ela tem alertas críticos?",
+  "passos_ref": [
+   "SELECT p.nome, COUNT(*), COUNT(DISTINCT a.linha_id) FROM alertas a JOIN paradas p ON p.id = a.parada_id WHERE a.tipo = 'CRITICO' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "Reta da Penha",
+   "188",
+   "5"
+  ]
+ },
+ {
+  "id": "M11",
+  "pergunta": "Qual linha teve a maior lotação média no último dia, qual foi a hora de pico dela nesse dia e quantos alertas críticos ela teve nesse dia?",
+  "passos_ref": [
+   "SELECT l.numero, d.hora_pico FROM resumos_dia d JOIN linhas l ON l.id = d.linha_id WHERE d.data = (SELECT MAX(data) FROM resumos_dia) ORDER BY d.media_percentual DESC LIMIT 1",
+   "SELECT COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND l.numero = '562' AND date(a.criado_em) = (SELECT MAX(data) FROM resumos_dia)"
+  ],
+  "esperado": [
+   "562",
+   "07|7h|7:00|07h|07:00",
+   "6"
+  ]
+ },
+ {
+  "id": "M12",
+  "pergunta": "Quantos alertas críticos a linha com mais alertas críticos teve nas horas 07, 08 e 09 (das 07:00 às 09:59)?",
+  "passos_ref": [
+   "SELECT l.numero, COUNT(*) FROM alertas a JOIN linhas l ON l.id = a.linha_id WHERE a.tipo = 'CRITICO' AND strftime('%H', a.criado_em) BETWEEN '07' AND '09' AND l.numero = (SELECT l2.numero FROM alertas a2 JOIN linhas l2 ON l2.id = a2.linha_id WHERE a2.tipo = 'CRITICO' GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 1)"
+  ],
+  "esperado": [
+   "562",
+   "60"
+  ]
+ },
+ {
+  "id": "M13",
+  "pergunta": "Quantas viagens canceladas existem no total e qual linha tem mais?",
+  "passos_ref": [
+   "SELECT COUNT(*) FROM viagens WHERE status = 'cancelada'",
+   "SELECT l.numero, COUNT(*) FROM viagens v JOIN linhas l ON l.id = v.linha_id WHERE v.status = 'cancelada' GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  ],
+  "esperado": [
+   "450",
+   "536"
+  ]
+ }
+]

@@ -4,10 +4,11 @@ from pathlib import Path
 
 
 def _carregar_env():
-    arq = Path(__file__).resolve().parent.parent / ".env"
-    if not arq.is_file():
+    raiz = Path(__file__).resolve().parent.parent
+    arq = next((a for a in (raiz / ".env.api", raiz / ".env") if a.is_file()), None)
+    if arq is None:
         return
-    for linha in arq.read_text(encoding="utf-8").splitlines():
+    for linha in arq.read_text(encoding="utf-8-sig").splitlines():
         linha = linha.strip()
         if not linha or linha.startswith("#") or "=" not in linha:
             continue
