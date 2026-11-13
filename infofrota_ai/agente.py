@@ -100,6 +100,10 @@ def _interpretar(bruto: str) -> Optional[dict]:
     return {"ferramenta": dados["ferramenta"], "entrada": str(dados.get("entrada") or "").strip()}
 
 
+class LimiteDiario(LLMErro):
+    """Cota diária esgotada: esperar minutos não adianta."""
+
+
 class ComEspera:
     """Repete chamadas quando o provedor devolve HTTP 429."""
     def __init__(self, llm, tentativas=8):
@@ -111,6 +115,8 @@ class ComEspera:
             try:
                 return metodo(*args, **kwargs)
             except LLMErro as erro:
+                if "HTTP 429" in str(erro) and ("per day" in str(erro) or "(TPD)" in str(erro) or "(RPD)" in str(erro)):
+                    raise LimiteDiario(str(erro)) from erro
                 if "HTTP 429" not in str(erro) or i == self.tentativas - 1:
                     raise
                 espera = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", str(erro))

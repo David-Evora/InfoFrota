@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from infofrota_ai.agente import Agente, ComEspera, _interpretar
+from infofrota_ai.agente import Agente, ComEspera, LimiteDiario, _interpretar
 from infofrota_ai.avaliar_agente import QUESTOES, contem
 from infofrota_ai.db import DB_PATH
 from infofrota_ai.llm import CachedLLM, LLMErro
@@ -227,6 +227,21 @@ class TestAgente(unittest.TestCase):
 
 
 class TestPerguntasAgente(unittest.TestCase):
+    def test_contem_hifen_unicode(self):
+        self.assertTrue(contem("Na sexta\u2011feira, placa SIN\u20110049", ["sexta", "SIN-0049"]))
+        self.assertTrue(contem("dia 2026\u201110\u201109", ["2026-10-09"]))
+        self.assertFalse(contem("SIN\u20110050", ["SIN-0049"]))
+
+    def test_limite_diario_nao_espera(self):
+        class Dia:
+            nome = "x"
+            def complete(self, system, messages):
+                raise LLMErro("HTTP 429 Rate limit on tokens per day (TPD): try again in 2h10m")
+        with mock.patch("infofrota_ai.agente.time.sleep") as dormir:
+            with self.assertRaises(LimiteDiario):
+                ComEspera(Dia()).complete("s", [])
+        dormir.assert_not_called()
+
     def test_contem(self):
         self.assertTrue(contem("Vitória lidera", ["vitoria"]))
         self.assertTrue(contem("às 17h", ["17|17h"]))

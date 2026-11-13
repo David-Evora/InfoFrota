@@ -7,12 +7,13 @@ Uso:
 import argparse
 import json
 import re
+import sys
 import time
 import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-from .agente import Agente, ComEspera
+from .agente import Agente, ComEspera, LimiteDiario
 from .assistant import Assistente
 from .db import DB_PATH
 from .llm import CachedLLM, llm_do_ambiente
@@ -23,8 +24,13 @@ QUESTOES = ROOT / "evaluation" / "agent_questions.json"
 RUNS = ROOT / "evaluation" / "runs"
 
 
+_TRACOS = dict.fromkeys(range(0x2010, 0x2016), "-") | {0x2212: "-"}   # hifens/travessões Unicode viram "-"
+
+
 def _norm(texto) -> str:
-    return unicodedata.normalize("NFKD", str(texto).lower()).encode("ascii", "ignore").decode()
+    # sem isso "sexta‑feira" (U+2011) perde o hífen no ASCII e vira "sextafeira"
+    t = str(texto).lower().translate(_TRACOS)
+    return unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode()
 
 
 def contem(texto, esperado) -> bool:
@@ -83,6 +89,8 @@ def avaliar(llm, questoes, db_path=DB_PATH, prompt="ultra", rag=True, max_passos
                 consultas_agente=sum(p["ferramenta"] == "sql" for p in resposta_agente.passos),
                 chamadas_agente=llm.chamadas - antes,
             )
+        except LimiteDiario:        # aborta sem gravar falha; o cache guarda o progresso
+            raise
         except Exception as erro:
             item.setdefault("ok_unico", False)
             item.update(ok_agente=False, erro_agente=f"{type(erro).__name__}: {erro}")
@@ -151,7 +159,10 @@ def main():
 
     llm = ComEspera(llm_do_ambiente(args.provider, args.model, args.base_url))
     llm = Contador(llm if args.no_cache else CachedLLM(llm))
-    resultados = avaliar(llm, questoes, prompt=args.prompt, rag=not args.sem_rag, max_passos=args.max_passos)
+    try:
+        resultados = avaliar(llm, questoes, prompt=args.prompt, rag=not args.sem_rag, max_passos=args.max_passos)
+    except LimiteDiario as erro:
+        sys.exit(f"Cota diária do provedor esgotada. O progresso está no cache: rode o mesmo comando depois.\n{erro}")
     resumo_execucao = resumo(resultados)
     markdown = relatorio_md(llm.nome, resumo_execucao, resultados)
     print(markdown)

@@ -6,12 +6,13 @@ Rodar:   pip install -r requirements-api.txt
 Endpoints
   GET  /saude      estado do serviço e período dos dados
   POST /perguntar  pergunta em português -> SQL -> resultado (+ texto opcional)
+  POST /agente     pergunta em português -> agente que consulta várias vezes -> resposta + passos
   GET  /alertas    alertas numa janela de tempo (sem LLM; para o n8n consultar de tempos em tempos)
   GET  /resumo     resumo de um dia por linha (sem LLM)
 
 Configuração por variáveis de ambiente
   INFOFROTA_PROVIDER / INFOFROTA_MODEL / INFOFROTA_BASE_URL   modelo (anthropic, openai-compat/Ollama/vLLM, hf)
-  INFOFROTA_PROMPT (ultra)   INFOFROTA_RAG (1)   INFOFROTA_SHOTS (0)
+  INFOFROTA_PROMPT (ultra)   INFOFROTA_RAG (1)   INFOFROTA_SHOTS (0)   INFOFROTA_AGENTE_PASSOS (8)
   INFOFROTA_API_KEY          se definida, exige o cabeçalho X-API-Key
   INFOFROTA_CORS             origens permitidas, separadas por vírgula (para a interface web)
   INFOFROTA_LIMITE_POR_MIN   pedidos a /perguntar por minuto por IP (30)
@@ -38,6 +39,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import prompts
+from .agente import Agente
 from .assistant import Assistente
 from .db import DB_PATH, conectar
 from .llm import llm_do_ambiente
@@ -51,17 +53,21 @@ class PerguntaIn(BaseModel):
     texto: bool = Field(False, description="Se verdadeiro, devolve também uma resposta em texto (uma chamada extra ao modelo)")
 
 
+class AgenteIn(BaseModel):
+    pergunta: str = Field(min_length=3, max_length=500, description="Pergunta em português; pode exigir várias consultas")
+
+
 def _linhas(con, sql, params=()):
     cur = con.execute(sql, params)
     nomes = [c[0] for c in cur.description]
     return [dict(zip(nomes, r)) for r in cur.fetchall()]
 
 
-def create_app(assistente: Optional[Assistente] = None, db_path=None) -> FastAPI:
+def create_app(assistente: Optional[Assistente] = None, db_path=None, agente: Optional[Agente] = None) -> FastAPI:
     db_path = db_path or os.environ.get("INFOFROTA_DB") or DB_PATH
     app = FastAPI(title="InfoFrota AI", version="1.0",
                   description="Text-to-SQL sobre a lotação de ônibus da Grande Vitória. " + prompts.NOTA_DADOS)
-    estado = {"bot": assistente, "lock": threading.Lock(), "acessos": defaultdict(deque)}
+    estado = {"bot": assistente, "agente": agente, "lock": threading.Lock(), "acessos": defaultdict(deque)}
 
     origens = [o.strip() for o in os.environ.get("INFOFROTA_CORS", "").split(",") if o.strip()]
     if origens:
@@ -85,6 +91,15 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None) -> FastAPI
                 raise HTTPException(503, f"modelo não configurado: {e}")
         return estado["bot"]
 
+    def agente_pronto() -> Agente:
+        if estado["agente"] is None:
+            try:
+                estado["agente"] = Agente(llm_do_ambiente(), db_path=db_path,
+                                          max_passos=int(os.environ.get("INFOFROTA_AGENTE_PASSOS", "8")))
+            except Exception as e:
+                raise HTTPException(503, f"modelo não configurado: {e}")
+        return estado["agente"]
+
     def limitar(request: Request):
         limite = int(os.environ.get("INFOFROTA_LIMITE_POR_MIN", "30"))
         fila, agora = estado["acessos"][request.client.host if request.client else "?"], time.monotonic()
@@ -107,6 +122,16 @@ def create_app(assistente: Optional[Assistente] = None, db_path=None) -> FastAPI
         try:
             with estado["lock"]:        # um modelo local não atende dois pedidos ao mesmo tempo
                 resp = bot.perguntar(corpo.pergunta.strip(), responder_em_texto=corpo.texto)
+        except Exception as e:
+            raise HTTPException(502, f"falha ao consultar o modelo: {e}")
+        return asdict(resp)
+
+    @app.post("/agente", dependencies=[Depends(autenticar), Depends(limitar)])
+    def perguntar_ao_agente(corpo: AgenteIn):
+        bot = agente_pronto()
+        try:
+            with estado["lock"]:
+                resp = bot.perguntar(corpo.pergunta.strip())
         except Exception as e:
             raise HTTPException(502, f"falha ao consultar o modelo: {e}")
         return asdict(resp)

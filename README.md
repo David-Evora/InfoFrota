@@ -100,6 +100,7 @@ A documentação interativa da API fica em `/docs` quando executada localmente. 
 |---|---|---|
 | GET | `/saude` | Estado do serviço e período dos dados |
 | POST | `/perguntar` | Recebe pergunta em português e retorna resultado Text-to-SQL |
+| POST | `/agente` | Agente que faz várias consultas (Tool Calling) e retorna resposta e passos |
 | GET | `/alertas` | Consulta alertas por tipo, janela e limite |
 | GET | `/resumo` | Retorna resumo diário por linha |
 
@@ -121,6 +122,25 @@ O módulo recebe perguntas em português, recupera contexto do esquema SQLite e 
 O RAG de esquema recupera tabelas/views, valores categóricos e regras relevantes. O benchmark congelado e os relatórios experimentais ficam em `evaluation/`; não use perguntas de avaliação como fonte de recuperação ou treinamento, para evitar vazamento.
 
 Os resultados de avaliação são experimentais e restritos à base e às perguntas controladas. Não representam desempenho em produção ou sobre dados reais de transporte.
+
+### Agente multi-etapas
+
+`infofrota_ai/agente.py` resolve perguntas que exigem várias consultas (ex.: "qual a linha com mais alertas críticos e em que hora eles se concentram?"). O modelo chama duas ferramentas por Tool Calling nativo da API OpenAI-compatível, `consultar_esquema` e `executar_sql`, uma por turno, e responde em texto. Toda consulta passa pela mesma guarda somente leitura de `db.py`. Disponível na CLI (`python -m infofrota_ai.agente "pergunta" --verbose`) e em `POST /agente`.
+
+`python -m infofrota_ai.avaliar_agente` compara o agente com o assistente de consulta única, com o mesmo modelo, em 13 perguntas multi-etapas (`evaluation/agent_questions.json`, gabarito conferido no banco sintético). Critério: todos os valores esperados aparecem no texto final.
+
+| Execução | Consulta única | Agente | Chamadas ao modelo (média) |
+|---|---:|---:|---|
+| `gpt-oss-20b`, protocolo JSON em texto | 7/13 | 6/13 | 1,62 / 6,15 |
+| `gpt-oss-120b`, Tool Calling nativo, avaliador original | 9/13 | 9/13 | 1,77 / 3,38 |
+| mesma execução, avaliador corrigido | 9/13 | 12/13 | 1,77 / 3,38 |
+
+- Com o 20B, a maioria das chamadas do agente foi desperdiçada em respostas fora do formato; por isso a arquitetura passou a usar Tool Calling nativo e o modelo 120B.
+- Três falhas do agente (M03, M08, M09) eram do avaliador: o modelo escreveu hífens Unicode (`sexta‑feira`, `SIN‑0049`, `2026‑10‑09`) e a normalização os removia. A correção (`_norm`) foi feita **depois** de ver o resultado, vale para os dois modos e foi reaplicada aos textos salvos; a linha "avaliador original" mantém o número anterior.
+- A única falha restante do agente (M12) respondeu 60, mas não citou a linha 562, que o gabarito exige.
+- As 13 perguntas já foram usadas na análise e nos ajustes do agente: é uma avaliação diagnóstica, não independente. 13 perguntas e uma só execução; diferenças pequenas são ruído. Dados sintéticos.
+
+Servidor MCP opcional (`pip install -r requirements-mcp.txt`; `python -m infofrota_ai.mcp_server`): expõe as mesmas duas ferramentas ao Claude Desktop, Cursor e outros clientes MCP.
 
 Consulte:
 - [`docs/INFOFROTA_AI.md`](docs/INFOFROTA_AI.md)
