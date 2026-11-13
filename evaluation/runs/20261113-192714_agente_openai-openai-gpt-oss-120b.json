@@ -1,0 +1,43 @@
+{
+ "modelo": "openai-openai/gpt-oss-120b",
+ "resumo": {
+  "n": 1,
+  "acertos_unico": 0,
+  "acertos_agente": 1,
+  "consultas_medias_agente": 2.0,
+  "chamadas_medias_agente": 3.0,
+  "chamadas_medias_unico": 1.0
+ },
+ "resultados": [
+  {
+   "id": "M02",
+   "pergunta": "Qual a linha com maior lotação média no período e qual parada concentra mais alertas críticos nela?",
+   "esperado": [
+    "562",
+    "Reta da Penha"
+   ],
+   "ok_unico": false,
+   "texto_unico": null,
+   "sql_unico": null,
+   "chamadas_unico": 1,
+   "ok_agente": true,
+   "texto_agente": "A linha com maior lotação média no período foi a **562**, com média de ocupação de aproximadamente 25,8 %.  \nA parada que concentrou mais alertas críticos nessa linha foi a **Reta da Penha**, com 80 alertas críticos.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT linha_numero, AVG(media_percentual) AS avg_media\nFROM v_lotacao_clima\nWHERE date(data_hora) BETWEEN '2026-10-05' AND '2026-11-03'\nGROUP BY linha_numero\nORDER BY avg_media DESC\nLIMIT 1;",
+     "observacao": "{\"colunas\": [\"linha_numero\", \"avg_media\"], \"linhas\": [[\"562\", 25.76563847429519]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT p.nome AS parada_nome, COUNT(*) AS total_criticos\nFROM alertas a\nJOIN linhas l ON a.linha_id = l.id\nJOIN paradas p ON a.parada_id = p.id\nWHERE l.numero = '562' AND a.tipo = 'CRITICO'\n  AND date(a.criado_em) BETWEEN '2026-10-05' AND '2026-11-03'\nGROUP BY p.id\nORDER BY total_criticos DESC\nLIMIT 1;",
+     "observacao": "{\"colunas\": [\"parada_nome\", \"total_criticos\"], \"linhas\": [[\"Reta da Penha\", 80]], \"truncado\": false}"
+    }
+   ],
+   "consultas_agente": 2,
+   "chamadas_agente": 3,
+   "segundos": 2.9
+  }
+ ]
+}

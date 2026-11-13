@@ -1,12 +1,8 @@
-"""Compara, nas perguntas de vários passos (evaluation/agent_questions.json), o assistente de uma
-consulta (Text-to-SQL) com o agente de ferramentas, usando o MESMO modelo.
+"""Compara consulta única e agente nativo nas perguntas multi-etapas.
 
-    python -m infofrota_ai.avaliar_agente --provider openai --model openai/gpt-oss-20b --base-url https://api.groq.com/openai/v1
-    opções: --only M01,M02  --max-passos 6  --prompt ultra  --sem-rag  --no-cache  --sem-relatorio
-
-Critério: todos os valores de "esperado" aparecem no texto final (acento e caixa ignorados; "a|b" = a ou b).
-Para o assistente de uma consulta, conta também as linhas do resultado (critério generoso com ele).
-São poucas perguntas: diferenças de uma ou duas são ruído, e os dados são sintéticos.
+Uso:
+ python -m infofrota_ai.avaliar_agente --provider openai --model openai/gpt-oss-120b --base-url https://api.groq.com/openai/v1
+ opções: --only M01,M02 --max-passos 8 --no-cache --questoes caminho.json
 """
 import argparse
 import json
@@ -27,112 +23,147 @@ QUESTOES = ROOT / "evaluation" / "agent_questions.json"
 RUNS = ROOT / "evaluation" / "runs"
 
 
-def _norm(t) -> str:
-    return unicodedata.normalize("NFKD", str(t).lower()).encode("ascii", "ignore").decode()
+def _norm(texto) -> str:
+    return unicodedata.normalize("NFKD", str(texto).lower()).encode("ascii", "ignore").decode()
 
 
 def contem(texto, esperado) -> bool:
-    """Cada item de `esperado` precisa aparecer no texto; 'a|b' aceita qualquer alternativa.
-    O valor não pode estar colado em outra letra/dígito nem ser a parte inteira de um decimal."""
-    t = _norm(texto)
-    return all(any(re.search(rf"(?<!\w){re.escape(_norm(alt))}(?!\w|[.,]\d)", t) for alt in item.split("|"))
-               for item in esperado)
+    texto_norm = _norm(texto)
+    return all(
+        any(re.search(rf"(?<!\w){re.escape(_norm(alternativa))}(?!\w|[.,]\d)", texto_norm)
+            for alternativa in item.split("|"))
+        for item in esperado
+    )
 
 
 class Contador:
-    """Conta chamadas ao modelo (inclui as servidas pelo cache)."""
+    """Conta chamadas lógicas ao modelo, inclusive respostas de cache."""
     def __init__(self, llm):
         self.llm, self.nome, self.chamadas = llm, llm.nome, 0
+        self.supports_tool_calling = getattr(llm, "supports_tool_calling", callable(getattr(llm, "complete_with_tools", None)))
 
     def complete(self, system, messages):
         self.chamadas += 1
         return self.llm.complete(system, messages)
 
+    def complete_with_tools(self, system, messages, tools, tool_choice="auto", parallel_tool_calls=False):
+        self.chamadas += 1
+        metodo = getattr(self.llm, "complete_with_tools", None)
+        if metodo is None:
+            raise RuntimeError("cliente sem suporte a Tool Calling nativo")
+        return metodo(system, messages, tools, tool_choice, parallel_tool_calls)
 
-def avaliar(llm, questoes, db_path=DB_PATH, prompt="ultra", rag=True, max_passos=6):
+
+def avaliar(llm, questoes, db_path=DB_PATH, prompt="ultra", rag=True, max_passos=8):
     unico = Assistente(llm, db_path=db_path, shots=0, compacto=MODOS[prompt], rag=rag)
     agente = Agente(llm, db_path=db_path, max_passos=max_passos)
-    out = []
-    for q in questoes:
-        r = {"id": q["id"], "pergunta": q["pergunta"], "esperado": q["esperado"]}
-        t0 = time.monotonic()
+    resultados = []
+    for questao in questoes:
+        item = {"id": questao["id"], "pergunta": questao["pergunta"], "esperado": questao["esperado"]}
+        inicio = time.monotonic()
         try:
-            c0 = llm.chamadas
-            u = unico.perguntar(q["pergunta"], responder_em_texto=True)
-            r.update(ok_unico=contem(f"{u.texto} {json.dumps(u.linhas, ensure_ascii=False, default=str)}", q["esperado"]),
-                     texto_unico=u.texto, sql_unico=u.sql, chamadas_unico=llm.chamadas - c0)
-            c0 = llm.chamadas
-            a = agente.perguntar(q["pergunta"])
-            r.update(ok_agente=bool(a.texto) and contem(a.texto, q["esperado"]), texto_agente=a.texto,
-                     erro_agente=a.erro, passos=a.passos, consultas_agente=sum(p["ferramenta"] == "sql" for p in a.passos),
-                     chamadas_agente=llm.chamadas - c0)
-        except Exception as e:      # limite de taxa, chave inválida, modelo indisponível
-            r.setdefault("ok_unico", False)
-            r.update(ok_agente=False, erro_agente=f"{type(e).__name__}: {e}")
-        r["segundos"] = round(time.monotonic() - t0, 1)
-        out.append(r)
-    return out
+            antes = llm.chamadas
+            resposta_unica = unico.perguntar(questao["pergunta"], responder_em_texto=True)
+            item.update(
+                ok_unico=contem(
+                    f"{resposta_unica.texto} {json.dumps(resposta_unica.linhas, ensure_ascii=False, default=str)}",
+                    questao["esperado"],
+                ),
+                texto_unico=resposta_unica.texto,
+                sql_unico=resposta_unica.sql,
+                chamadas_unico=llm.chamadas - antes,
+            )
+            antes = llm.chamadas
+            resposta_agente = agente.perguntar(questao["pergunta"])
+            item.update(
+                ok_agente=bool(resposta_agente.texto) and contem(resposta_agente.texto, questao["esperado"]),
+                texto_agente=resposta_agente.texto,
+                erro_agente=resposta_agente.erro,
+                passos=resposta_agente.passos,
+                consultas_agente=sum(p["ferramenta"] == "sql" for p in resposta_agente.passos),
+                chamadas_agente=llm.chamadas - antes,
+            )
+        except Exception as erro:
+            item.setdefault("ok_unico", False)
+            item.update(ok_agente=False, erro_agente=f"{type(erro).__name__}: {erro}")
+        item["segundos"] = round(time.monotonic() - inicio, 1)
+        resultados.append(item)
+    return resultados
 
 
 def resumo(resultados) -> dict:
-    n = len(resultados)
-    com = [r for r in resultados if "chamadas_agente" in r]
-    media = lambda k: round(sum(r[k] for r in com) / len(com), 2) if com else None
-    return {"n": n, "acertos_unico": sum(r["ok_unico"] for r in resultados),
-            "acertos_agente": sum(r["ok_agente"] for r in resultados),
-            "consultas_medias_agente": media("consultas_agente"), "chamadas_medias_agente": media("chamadas_agente"),
-            "chamadas_medias_unico": media("chamadas_unico")}
+    completos = [item for item in resultados if "chamadas_agente" in item]
+    media = lambda chave: round(sum(item[chave] for item in completos) / len(completos), 2) if completos else None
+    return {
+        "n": len(resultados),
+        "acertos_unico": sum(item["ok_unico"] for item in resultados),
+        "acertos_agente": sum(item["ok_agente"] for item in resultados),
+        "consultas_medias_agente": media("consultas_agente"),
+        "chamadas_medias_agente": media("chamadas_agente"),
+        "chamadas_medias_unico": media("chamadas_unico"),
+    }
 
 
-def relatorio_md(modelo, s, resultados) -> str:
-    linhas = [f"# Agente x consulta única: {modelo} | {s['n']} perguntas de vários passos\n",
-              "Mesmo modelo nos dois. Acerto = todos os valores esperados aparecem no texto final. "
-              "Dados sintéticos; poucas perguntas, então diferenças pequenas são ruído.\n",
-              "| | Acertos | Chamadas ao modelo (média) |", "|---|---|---|",
-              f"| Consulta única | {s['acertos_unico']}/{s['n']} | {s['chamadas_medias_unico']} |",
-              f"| Agente | {s['acertos_agente']}/{s['n']} | {s['chamadas_medias_agente']} "
-              f"({s['consultas_medias_agente']} consultas SQL) |", ""]
-    falhas = [r for r in resultados if not (r["ok_unico"] and r["ok_agente"])]
+def relatorio_md(modelo, resumo_execucao, resultados) -> str:
+    linhas = [
+        f"# Agente x consulta única: {modelo} | {resumo_execucao['n']} perguntas multi-etapas\n",
+        "Mesmo modelo nos dois modos. Acerto = todos os valores esperados aparecem no texto final. "
+        "Dados sintéticos; conjuntos pequenos ou selecionados para diagnóstico não são avaliação independente.\n",
+        "| | Acertos | Chamadas ao modelo (média) |", "|---|---|---|",
+        f"| Consulta única | {resumo_execucao['acertos_unico']}/{resumo_execucao['n']} | {resumo_execucao['chamadas_medias_unico']} |",
+        f"| Agente | {resumo_execucao['acertos_agente']}/{resumo_execucao['n']} | {resumo_execucao['chamadas_medias_agente']} "
+        f"({resumo_execucao['consultas_medias_agente']} consultas SQL) |", "",
+    ]
+    falhas = [item for item in resultados if not (item["ok_unico"] and item["ok_agente"])]
     linhas.append(f"## Perguntas com falha em pelo menos um modo ({len(falhas)})\n")
-    for r in falhas:
-        linhas += [f"### {r['id']} {r['pergunta']}", f"- esperado: {r['esperado']}",
-                   f"- consulta única: {'ok' if r['ok_unico'] else 'falhou'} | agente: {'ok' if r['ok_agente'] else 'falhou'}"]
-        if not r["ok_agente"]:
-            linhas.append(f"- agente: {r.get('texto_agente') or r.get('erro_agente')}")
-        if not r["ok_unico"]:
-            linhas.append(f"- consulta única: {r.get('texto_unico')}")
+    for item in falhas:
+        linhas.extend([
+            f"### {item['id']} {item['pergunta']}", f"- esperado: {item['esperado']}",
+            f"- consulta única: {'ok' if item['ok_unico'] else 'falhou'} | agente: {'ok' if item['ok_agente'] else 'falhou'}",
+        ])
+        if not item["ok_agente"]:
+            linhas.append(f"- agente: {item.get('texto_agente') or item.get('erro_agente')}")
+        if not item["ok_unico"]:
+            linhas.append(f"- consulta única: {item.get('texto_unico')}")
         linhas.append("")
     return "\n".join(linhas)
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    ap.add_argument("--provider")
-    ap.add_argument("--model")
-    ap.add_argument("--base-url")
-    ap.add_argument("--only")
-    ap.add_argument("--max-passos", type=int, default=6)
-    ap.add_argument("--prompt", choices=list(MODOS), default="ultra")
-    ap.add_argument("--sem-rag", action="store_true", help="tira o RAG de esquema do modo consulta única")
-    ap.add_argument("--no-cache", action="store_true")
-    ap.add_argument("--sem-relatorio", action="store_true")
-    a = ap.parse_args()
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--provider")
+    parser.add_argument("--model")
+    parser.add_argument("--base-url")
+    parser.add_argument("--only")
+    parser.add_argument("--max-passos", type=int, default=8)
+    parser.add_argument("--prompt", choices=list(MODOS), default="ultra")
+    parser.add_argument("--sem-rag", action="store_true")
+    parser.add_argument("--no-cache", action="store_true")
+    parser.add_argument("--sem-relatorio", action="store_true")
+    parser.add_argument("--questoes", type=Path, default=QUESTOES,
+                        help="arquivo JSON de perguntas; padrão: evaluation/agent_questions.json")
+    args = parser.parse_args()
 
-    questoes = json.loads(QUESTOES.read_text(encoding="utf-8"))
-    if a.only:
-        questoes = [q for q in questoes if q["id"] in set(a.only.split(","))]
-    llm = ComEspera(llm_do_ambiente(a.provider, a.model, a.base_url))
-    llm = Contador(llm if a.no_cache else CachedLLM(llm))
-    resultados = avaliar(llm, questoes, prompt=a.prompt, rag=not a.sem_rag, max_passos=a.max_passos)
-    s = resumo(resultados)
-    md = relatorio_md(llm.nome, s, resultados)
-    print(md)
-    if not a.sem_relatorio:
+    questoes = json.loads(args.questoes.read_text(encoding="utf-8"))
+    if args.only:
+        selecionadas = set(args.only.split(","))
+        questoes = [questao for questao in questoes if questao["id"] in selecionadas]
+
+    llm = ComEspera(llm_do_ambiente(args.provider, args.model, args.base_url))
+    llm = Contador(llm if args.no_cache else CachedLLM(llm))
+    resultados = avaliar(llm, questoes, prompt=args.prompt, rag=not args.sem_rag, max_passos=args.max_passos)
+    resumo_execucao = resumo(resultados)
+    markdown = relatorio_md(llm.nome, resumo_execucao, resultados)
+    print(markdown)
+
+    if not args.sem_relatorio:
         RUNS.mkdir(parents=True, exist_ok=True)
         base = RUNS / f"{datetime.now():%Y%m%d-%H%M%S}_agente_{llm.nome.replace('/', '-')}"
-        Path(f"{base}.json").write_text(json.dumps({"modelo": llm.nome, "resumo": s, "resultados": resultados},
-                                                   ensure_ascii=False, indent=1), encoding="utf-8")
-        Path(f"{base}.md").write_text(md, encoding="utf-8")
+        Path(f"{base}.json").write_text(json.dumps(
+            {"modelo": llm.nome, "resumo": resumo_execucao, "resultados": resultados},
+            ensure_ascii=False, indent=1,
+        ), encoding="utf-8")
+        Path(f"{base}.md").write_text(markdown, encoding="utf-8")
         print(f"\nRelatório salvo em {base}.md")
 
 

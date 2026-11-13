@@ -1,0 +1,52 @@
+{
+ "modelo": "openai-openai/gpt-oss-120b",
+ "resumo": {
+  "n": 1,
+  "acertos_unico": 1,
+  "acertos_agente": 1,
+  "consultas_medias_agente": 3.0,
+  "chamadas_medias_agente": 4.0,
+  "chamadas_medias_unico": 2.0
+ },
+ "resultados": [
+  {
+   "id": "M08",
+   "pergunta": "Quais placas de ônibus em manutenção têm como linha padrão a linha com mais alertas críticos?",
+   "esperado": [
+    "SIN-0049"
+   ],
+   "ok_unico": true,
+   "texto_unico": "0049",
+   "sql_unico": "SELECT o.placa\nFROM onibus o\nWHERE o.status = 'manutencao'\n  AND o.linha_padrao_id = (\n    SELECT a.linha_id\n    FROM alertas a\n    WHERE a.tipo = 'CRITICO'\n    GROUP BY a.linha_id\n    ORDER BY COUNT(*) DESC\n    LIMIT 1\n  )",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "A placa do ônibus em manutenção cuja linha padrão tem mais alertas críticos é SIN-0049.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT linha_id, COUNT(*) AS total_criticos FROM alertas WHERE tipo='CRITICO' AND resolvido=0 GROUP BY linha_id ORDER BY total_criticos DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"linha_id\", \"total_criticos\"], \"linhas\": [], \"truncado\": false}\nREVISÃO NECESSÁRIA: o resultado veio vazio ou zerado. Antes de responder que não há registros, confira os valores categóricos exatamente como estão no esquema e os filtros de data. Para timestamps, considere date(coluna) ao filtrar dias inteiros. Se a consulta estiver correta, o zero pode ser legítimo; não invente linhas."
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT linha_id, COUNT(*) AS total_criticos FROM alertas WHERE tipo='CRITICO' GROUP BY linha_id ORDER BY total_criticos DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"linha_id\", \"total_criticos\"], \"linhas\": [[72, 133]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT placa FROM onibus WHERE status='manutencao' AND linha_padrao_id=72;",
+     "observacao": "{\"colunas\": [\"placa\"], \"linhas\": [[\"SIN-0049\"]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "A placa do ônibus em manutenção cuja linha padrão tem mais alertas críticos é SIN-0049.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 3,
+   "chamadas_agente": 4,
+   "segundos": 20.1
+  }
+ ]
+}

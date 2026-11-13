@@ -1,0 +1,148 @@
+"""Clientes de LLM. Todos expõem `nome` e `complete(system, messages) -> str`.
+
+ * AnthropicLLM    : API da Anthropic (variável ANTHROPIC_API_KEY).
+ * OpenAICompatLLM : qualquer servidor /chat/completions (vLLM, Ollama, TGI,
+                     OpenAI...). É por aqui que o modelo com LoRA entra depois.
+ * CachedLLM       : guarda as respostas em disco; reexecutar a avaliação é de graça.
+"""
+import hashlib
+import json
+import os
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CACHE_DIR = ROOT / "evaluation" / "cache"
+
+
+class LLMErro(RuntimeError):
+    pass
+
+
+class AnthropicLLM:
+    def __init__(self, model=None, api_key=None, base_url=None, max_tokens=1024):
+        import anthropic  # importação tardia: só precisa do pacote quem usa este cliente
+        self.model = model or os.environ.get("INFOFROTA_MODEL", "claude-sonnet-5-5")
+        self.max_tokens = max_tokens
+        self.nome = f"anthropic-{self.model}"
+        self._client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
+
+    def complete(self, system, messages):
+        args = dict(model=self.model, max_tokens=self.max_tokens,
+                    system=system, messages=messages)
+        try:
+            r = self._client.messages.create(temperature=0, **args)
+        except Exception as e:  # alguns modelos não aceitam temperature
+            if "temperature" not in str(e).lower():
+                raise LLMErro(str(e)) from e
+            r = self._client.messages.create(**args)
+        return "".join(b.text for b in r.content if getattr(b, "type", "") == "text")
+
+
+class OpenAICompatLLM:
+    def __init__(self, model, base_url=None, api_key=None, max_tokens=1024, timeout=120):
+        self.model = model
+        self.base_url = (base_url or os.environ.get("OPENAI_BASE_URL",
+                                                    "http://localhost:8000/v1")).rstrip("/")
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        self.max_tokens, self.timeout = max_tokens, timeout
+        self.nome = f"openai-{model}"
+
+    def _post(self, system, messages, response_format=None):
+        payload = {
+            "model": self.model, "temperature": 0, "max_tokens": self.max_tokens,
+            "messages": [{"role": "system", "content": system}] + messages,
+        }
+        if response_format is not None:
+            payload["response_format"] = response_format
+            # GPT-OSS no Groq usa include_reasoning; reasoning_format não é suportado.
+            payload["include_reasoning"] = False
+        corpo = json.dumps(payload).encode()
+        req = urllib.request.Request(f"{self.base_url}/chat/completions", data=corpo, headers={
+            "Content-Type": "application/json", "User-Agent": "infofrota-ai/1.0",
+            **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {})})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                dados = json.load(r)
+            return dados["choices"][0]["message"].get("content") or ""
+        except urllib.error.HTTPError as e:
+            detalhe = e.read().decode("utf-8", "replace")[:500]
+            raise LLMErro(f"falha ao chamar {self.base_url}: HTTP {e.code} {detalhe}") from e
+        except (urllib.error.URLError, KeyError, IndexError, json.JSONDecodeError) as e:
+            raise LLMErro(f"falha ao chamar {self.base_url}: {e}") from e
+
+    def complete(self, system, messages):
+        return self._post(system, messages)
+
+    def complete_structured(self, system, messages, schema):
+        """Saída JSON Schema estrita nos modelos GPT-OSS suportados pelo Groq.
+
+        Outros endpoints OpenAI-compatíveis usam o caminho de texto convencional.
+        """
+        modelo = self.model.lower()
+        groq = "api.groq.com" in self.base_url.lower()
+        if not (groq and modelo in {"openai/gpt-oss-20b", "openai/gpt-oss-120b"}):
+            return self.complete(system, messages)
+        formato = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "infofrota_agent_action",
+                "strict": True,
+                "schema": schema,
+            },
+        }
+        return self._post(system, messages, response_format=formato)
+
+
+class CachedLLM:
+    def __init__(self, llm, cache_dir=CACHE_DIR):
+        self.llm, self.nome = llm, llm.nome
+        self.dir = Path(cache_dir)
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def complete(self, system, messages):
+        # Mantém exatamente a chave histórica: a cache da consulta única não é invalidada.
+        chave = hashlib.sha256(json.dumps(
+            [self.nome, system, messages], ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        arq = self.dir / f"{chave}.json"
+        if arq.exists():
+            return json.loads(arq.read_text(encoding="utf-8"))["resposta"]
+        resposta = self.llm.complete(system, messages)
+        arq.write_text(json.dumps({"modelo": self.nome, "resposta": resposta},
+                                  ensure_ascii=False), encoding="utf-8")
+        return resposta
+
+    def complete_structured(self, system, messages, schema):
+        metodo = getattr(self.llm, "complete_structured", None)
+        if metodo is None:
+            return self.complete(system, messages)
+        # Chave separada, incluindo o schema: não colide com respostas de texto antigas.
+        chave = hashlib.sha256(json.dumps(
+            [self.nome, "structured", system, messages, schema],
+            ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        arq = self.dir / f"{chave}.json"
+        if arq.exists():
+            return json.loads(arq.read_text(encoding="utf-8"))["resposta"]
+        resposta = metodo(system, messages, schema)
+        arq.write_text(json.dumps({"modelo": self.nome, "resposta": resposta},
+                                  ensure_ascii=False), encoding="utf-8")
+        return resposta
+
+
+def llm_do_ambiente(provider=None, model=None, base_url=None):
+    provider = (provider or os.environ.get("INFOFROTA_PROVIDER", "anthropic")).lower()
+    if provider == "anthropic":
+        return AnthropicLLM(model=model, base_url=base_url)
+    if provider in ("openai", "openai-compat"):
+        modelo = model or os.environ.get("INFOFROTA_MODEL")
+        if not modelo:
+            raise LLMErro("informe --model (ou INFOFROTA_MODEL) para o provider openai")
+        return OpenAICompatLLM(modelo, base_url=base_url)
+    if provider == "hf":
+        from .hf_llm import HFLLM
+        base, _, adaptador = (model or os.environ.get("INFOFROTA_MODEL", "")).partition("::")
+        if not base:
+            raise LLMErro("use --model BASE[::ADAPTADOR] com o provider hf")
+        return HFLLM(base, adaptador or None)
+    raise LLMErro(f"provider desconhecido: {provider}")

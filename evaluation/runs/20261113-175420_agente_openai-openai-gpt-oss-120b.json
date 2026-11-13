@@ -1,0 +1,225 @@
+{
+ "modelo": "openai-openai/gpt-oss-120b",
+ "resumo": {
+  "n": 6,
+  "acertos_unico": 3,
+  "acertos_agente": 5,
+  "consultas_medias_agente": 2.4,
+  "chamadas_medias_agente": 3.8,
+  "chamadas_medias_unico": 1.8
+ },
+ "resultados": [
+  {
+   "id": "M02",
+   "pergunta": "Qual a linha com maior lotação média no período e qual parada concentra mais alertas críticos nela?",
+   "esperado": [
+    "562",
+    "Reta da Penha"
+   ],
+   "ok_unico": false,
+   "texto_unico": null,
+   "sql_unico": null,
+   "chamadas_unico": 1,
+   "ok_agente": false,
+   "erro_agente": "LLMErro: falha ao chamar https://api.groq.com/openai/v1: HTTP 400 {\"error\":{\"message\":\"Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"type\":\"invalid_request_error\",\"code\":\"json_validate_failed\",\"failed_generation\":\"{\\\"pensamento\\\":\\\"Obter o id da linha 562\\\",\\\"ferramenta\\\":\\\"sql\\\",\\\"entrada\\\":\\\"SELECT id FROM linhas WHERE numero = '562';\\\"}{\\\"pensamento\\\":\\\"Contar alertas críticos por parada na linha 562\\\",\\\"ferramenta\\\":\\\"sql\\\",\\\"entrada\\\":\\\"SELECT p.nome AS parada_nome, COUNT(a.id) AS total_criticos FROM alert",
+   "segundos": 5.6
+  },
+  {
+   "id": "M07",
+   "pergunta": "Qual linha teve mais viagens canceladas e quantos alertas críticos ela teve no período?",
+   "esperado": [
+    "536",
+    "63"
+   ],
+   "ok_unico": true,
+   "texto_unico": "A linha 536 foi a que apresentou mais viagens canceladas. Ela teve **40** viagens canceladas e **63** alertas críticos no período.",
+   "sql_unico": "WITH cancel_counts AS (\n  SELECT linha_id, COUNT(*) AS cnt_cancel\n  FROM viagens\n  WHERE status = 'cancelada'\n  GROUP BY linha_id\n),\ncrit_alert_counts AS (\n  SELECT linha_id, COUNT(*) AS cnt_critico\n  FROM alertas\n  WHERE tipo = 'CRITICO'\n  GROUP BY linha_id\n)\nSELECT l.numero AS linha_numero,\n       COALESCE(c.cnt_cancel, 0) AS viagens_canceladas,\n       COALESCE(a.cnt_critico, 0) AS alertas_criticos\nFROM linhas l\nLEFT JOIN cancel_counts c ON l.id = c.linha_id\nLEFT JOIN crit_alert_counts a ON l.id = a.linha_id\nORDER BY viagens_canceladas DESC, alertas_criticos DESC\nLIMIT 1",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "A linha 536 teve 40 viagens canceladas e 63 alertas críticos no período.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "esquema",
+     "entrada": "viagens, alertas",
+     "observacao": "{\"contexto\": \"CONTEXTO RECUPERADO PARA ESTA PERGUNTA (use nomes e valores exatamente como aparecem)\\nTabelas relevantes:\\n- linhas(id, numero, nome, tipo, capacidade_padrao, monitorada, ativa): uma linha de ônibus da CETURBES; só as monitoradas têm viagens, leituras e alertas\\n- resumos_dia(id, linha_id, data, media_percentual, max_percentual, hora_pico, total_viagens, total_alertas_atencao, total_alertas_critico, total_embarcaram, total_desembarcaram): agregado de lotação por linha e por dia: média, máximo, hora de pico, embarques, alertas. Chaves: resumos_dia.linha_id -> linhas.id\\n- viagens(id, onibus_id, linha_id, sentido, data_inicio, data_fim, status): cada saída de um ônibus em uma linha; início, fim, sentido e status. Chaves: viagens.linha_id -> linhas.id; viagens.onibus_id -> onibus.id\\n- alertas(id, viagem_id, linha_id, parada_id, tipo, percentual, mensagem, criado_em, resolvido, resolvido_em, em_precaucao, precaucao_descricao): alertas de lotação gerados das leituras, com tipo, ações de precaução e resolução. Chaves: alertas.parada_id -> paradas.id; alertas.linha_id -> linhas.id; alertas.viagem_id -> viagens.id\\nValores válidos:\\n- alertas.tipo: 'ATENCAO', 'CRITICO'\\n- viagens.status: 'cancelada', 'concluida'\\n- viagens.sentido: 'ida', 'volta'\\n- alertas.precaucao_descricao: 'Fiscal acionado no ponto', 'Intervalo reduzido na linha', 'Viagem extra programada', 'Ônibus de reforço despachado'\\nRegras:\\n- A linha de uma leitura vem de viagens (registros_ocupacao.viagem_id -> viagens.linha_id), e o número da linha de linhas.numero.\\n- Viagens canceladas não têm leituras nem data_fim. A duração da viagem é julianday(data_fim) - julianday(data_inicio).\"}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.id, l.numero, l.nome, COUNT(v.id) AS canceladas FROM viagens v JOIN linhas l ON v.linha_id = l.id WHERE v.status='cancelada' AND date(v.data_inicio) BETWEEN '2026-10-05' AND '2026-11-03' GROUP BY l.id ORDER BY canceladas DESC LIMIT 1",
+     "observacao": "{\"colunas\": [\"id\", \"numero\", \"nome\", \"canceladas\"], \"linhas\": [[66, \"536\", \"T. CAMPO GRANDE / T. VILA VELHA VIA MARUIPE - EXPRESSO\", 40]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT COUNT(*) AS criticos FROM alertas a WHERE a.linha_id=66 AND a.tipo='CRITICO' AND date(a.criado_em) BETWEEN '2026-10-05' AND '2026-11-03'",
+     "observacao": "{\"colunas\": [\"criticos\"], \"linhas\": [[63]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "A linha 536 teve 40 viagens canceladas e 63 alertas críticos no período.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 2,
+   "chamadas_agente": 4,
+   "segundos": 69.8
+  },
+  {
+   "id": "M09",
+   "pergunta": "No dia com mais alertas críticos, qual foi a data, qual foi o dia da semana e qual linha liderou?",
+   "esperado": [
+    "2026-10-09|09/10|9 de outubro",
+    "sexta",
+    "591"
+   ],
+   "ok_unico": false,
+   "texto_unico": null,
+   "sql_unico": null,
+   "chamadas_unico": 1,
+   "ok_agente": true,
+   "texto_agente": "Em 2026-10-09 (sexta), a linha 591 liderou com mais alertas críticos.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "esquema",
+     "entrada": "alertas e calendario",
+     "observacao": "{\"contexto\": \"CONTEXTO RECUPERADO PARA ESTA PERGUNTA (use nomes e valores exatamente como aparecem)\\nTabelas relevantes:\\n- calendario(data, dia_semana, tipo_dia, feriado_nome): tipo de cada dia (útil, sábado, domingo, feriado), dia da semana e nome do feriado\\n- alertas(id, viagem_id, linha_id, parada_id, tipo, percentual, mensagem, criado_em, resolvido, resolvido_em, em_precaucao, precaucao_descricao): alertas de lotação gerados das leituras, com tipo, ações de precaução e resolução. Chaves: alertas.parada_id -> paradas.id; alertas.linha_id -> linhas.id; alertas.viagem_id -> viagens.id\\n- v_alertas_abertos(id, tipo, linha_numero, linha_nome, parada_nome, percentual, mensagem, criado_em, em_precaucao, precaucao_descricao): view: alertas ainda não resolvidos\\n- resumos_dia(id, linha_id, data, media_percentual, max_percentual, hora_pico, total_viagens, total_alertas_atencao, total_alertas_critico, total_embarcaram, total_desembarcaram): agregado de lotação por linha e por dia: média, máximo, hora de pico, embarques, alertas. Chaves: resumos_dia.linha_id -> linhas.id\\nValores válidos:\\n- alertas.tipo: 'ATENCAO', 'CRITICO'\\n- calendario.tipo_dia: 'domingo', 'feriado', 'sabado', 'util'\\n- calendario.feriado_nome: 'Finados', 'Nossa Senhora Aparecida'\\n- alertas.precaucao_descricao: 'Fiscal acionado no ponto', 'Intervalo reduzido na linha', 'Viagem extra programada', 'Ônibus de reforço despachado'\\n- calendario.dia_semana: 'domingo', 'quarta', 'quinta', 'segunda', 'sexta', 'sábado', 'terça'\\nRegras:\\n- Para saber o tipo de dia (útil, sábado, domingo, feriado) ligue a data ao calendario: calendario.data = date(...).\"}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT date(criado_em) AS data, COUNT(*) AS total FROM alertas WHERE tipo='CRITICO' GROUP BY date(criado_em) ORDER BY total DESC LIMIT 1",
+     "observacao": "{\"colunas\": [\"data\", \"total\"], \"linhas\": [[\"2026-10-09\", 54]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT c.dia_semana FROM calendario c WHERE c.data='2026-10-09';",
+     "observacao": "{\"colunas\": [\"dia_semana\"], \"linhas\": [[\"sexta\"]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.numero AS linha_numero, COUNT(*) AS total FROM alertas a JOIN linhas l ON a.linha_id = l.id WHERE a.tipo='CRITICO' AND date(a.criado_em)='2026-10-09' GROUP BY l.id ORDER BY total DESC LIMIT 1",
+     "observacao": "{\"colunas\": [\"linha_numero\", \"total\"], \"linhas\": [[\"591\", 10]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "Em 2026-10-09 (sexta), a linha 591 liderou com mais alertas críticos.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 3,
+   "chamadas_agente": 5,
+   "segundos": 112.3
+  },
+  {
+   "id": "M11",
+   "pergunta": "Qual linha teve a maior lotação média no último dia, qual foi a hora de pico dela nesse dia e quantos alertas críticos ela teve nesse dia?",
+   "esperado": [
+    "562",
+    "07|7h|7:00|07h|07:00",
+    "6"
+   ],
+   "ok_unico": true,
+   "texto_unico": "562, 07:00:00, 6.",
+   "sql_unico": "SELECT l.numero AS linha_numero,\n       l.nome AS linha_nome,\n       rd.media_percentual,\n       rd.hora_pico,\n       rd.total_alertas_critico AS alertas_criticos\nFROM resumos_dia rd\nJOIN linhas l ON rd.linha_id = l.id\nWHERE rd.data = '2026-11-03'\n  AND rd.media_percentual = (\n      SELECT MAX(media_percentual)\n      FROM resumos_dia\n      WHERE data = '2026-11-03'\n  )",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "A linha 562 teve a maior lotação média no último dia, com 35.33%, a hora de pico foi 07:00:00 e ela registrou 6 alertas críticos.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.numero, r.media_percentual, r.hora_pico, r.total_alertas_critico FROM resumos_dia r JOIN linhas l ON r.linha_id = l.id WHERE r.data = '2026-11-03' ORDER BY r.media_percentual DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"numero\", \"media_percentual\", \"hora_pico\", \"total_alertas_critico\"], \"linhas\": [[\"562\", 35.33, \"07:00:00\", 6]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "A linha 562 teve a maior lotação média no último dia, com 35.33%, a hora de pico foi 07:00:00 e ela registrou 6 alertas críticos.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 1,
+   "chamadas_agente": 2,
+   "segundos": 44.0
+  },
+  {
+   "id": "M12",
+   "pergunta": "Quantos alertas críticos a linha com mais alertas críticos teve nas horas 07, 08 e 09 (das 07:00 às 09:59)?",
+   "esperado": [
+    "562",
+    "60"
+   ],
+   "ok_unico": false,
+   "texto_unico": "A linha com mais alertas críticos entre 07:00 e 09:59 registrou **60** alertas críticos.",
+   "sql_unico": "SELECT COUNT(*) AS total_criticos\nFROM alertas\nWHERE tipo = 'CRITICO'\n  AND time(criado_em) BETWEEN '07:00:00' AND '09:59:59'\nGROUP BY linha_id\nORDER BY total_criticos DESC\nLIMIT 1",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "A linha 562 teve 60 alertas críticos entre 07:00 e 09:59.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT linhas.numero, COUNT(*) AS total_criticos FROM alertas JOIN linhas ON alertas.linha_id = linhas.id WHERE alertas.tipo='CRITICO' GROUP BY linhas.id ORDER BY total_criticos DESC LIMIT 1",
+     "observacao": "{\"colunas\": [\"numero\", \"total_criticos\"], \"linhas\": [[\"562\", 133]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT COUNT(*) AS criticos_07_09 FROM alertas JOIN linhas ON alertas.linha_id = linhas.id WHERE linhas.numero = '562' AND alertas.tipo = 'CRITICO' AND strftime('%H', alertas.criado_em) IN ('07','08','09')",
+     "observacao": "{\"colunas\": [\"criticos_07_09\"], \"linhas\": [[60]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "A linha 562 teve 60 alertas críticos entre 07:00 e 09:59.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 2,
+   "chamadas_agente": 3,
+   "segundos": 51.8
+  },
+  {
+   "id": "M13",
+   "pergunta": "Quantas viagens canceladas existem no total e qual linha tem mais?",
+   "esperado": [
+    "450",
+    "536"
+   ],
+   "ok_unico": true,
+   "texto_unico": "Existem 450 viagens canceladas no total. A linha com mais cancelamentos é a 536.",
+   "sql_unico": "SELECT \n  (SELECT COUNT(*) FROM viagens WHERE status = 'cancelada') AS total_canceladas,\n  (SELECT l.numero FROM linhas l JOIN viagens v ON l.id = v.linha_id WHERE v.status = 'cancelada' GROUP BY l.id ORDER BY COUNT(*) DESC LIMIT 1) AS linha_numero_mais_cancelada,\n  (SELECT l.nome FROM linhas l JOIN viagens v ON l.id = v.linha_id WHERE v.status = 'cancelada' GROUP BY l.id ORDER BY COUNT(*) DESC LIMIT 1) AS linha_nome_mais_cancelada",
+   "chamadas_unico": 2,
+   "ok_agente": true,
+   "texto_agente": "Existem 450 viagens canceladas no total. A linha com mais cancelamentos é a 536 – T. CAMPO GRANDE / T. VILA VELHA VIA MARUIPE - EXPRESSO, com 40 cancelamentos.",
+   "erro_agente": null,
+   "passos": [
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT COUNT(*) AS total_canceladas FROM viagens WHERE status = 'cancelado';",
+     "observacao": "{\"colunas\": [\"total_canceladas\"], \"linhas\": [[0]], \"truncado\": false}\nREVISÃO NECESSÁRIA: o resultado veio vazio ou zerado. Antes de responder que não há registros, confira os valores categóricos exatamente como estão no esquema e os filtros de data. Para timestamps, considere date(coluna) ao filtrar dias inteiros. Se a consulta estiver correta, o zero pode ser legítimo; não invente linhas."
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT DISTINCT status FROM viagens;",
+     "observacao": "{\"colunas\": [\"status\"], \"linhas\": [[\"concluida\"], [\"cancelada\"]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT COUNT(*) AS total_canceladas FROM viagens WHERE status = 'cancelada';",
+     "observacao": "{\"colunas\": [\"total_canceladas\"], \"linhas\": [[450]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "sql",
+     "entrada": "SELECT l.numero AS linha_numero, l.nome AS linha_nome, COUNT(v.id) AS canceladas FROM viagens v JOIN linhas l ON v.linha_id = l.id WHERE v.status = 'cancelada' GROUP BY v.linha_id ORDER BY canceladas DESC LIMIT 1;",
+     "observacao": "{\"colunas\": [\"linha_numero\", \"linha_nome\", \"canceladas\"], \"linhas\": [[\"536\", \"T. CAMPO GRANDE / T. VILA VELHA VIA MARUIPE - EXPRESSO\", 40]], \"truncado\": false}"
+    },
+    {
+     "ferramenta": "responder",
+     "entrada": "Existem 450 viagens canceladas no total. A linha com mais cancelamentos é a 536 – T. CAMPO GRANDE / T. VILA VELHA VIA MARUIPE - EXPRESSO, com 40 cancelamentos.",
+     "observacao": null
+    }
+   ],
+   "consultas_agente": 4,
+   "chamadas_agente": 5,
+   "segundos": 88.6
+  }
+ ]
+}
