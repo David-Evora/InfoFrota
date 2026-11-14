@@ -267,9 +267,15 @@
           <ol class="trace" id="aiTrace" aria-label="Etapas do processamento"></ol>
         </div>
         <form class="console__ask hidden" id="aiForm" novalidate>
-          <label class="sr" for="aiInput">Pergunta ao assistente</label>
-          <input id="aiInput" type="text" minlength="3" maxlength="500" placeholder="Pergunte algo sobre o banco sintético…" autocomplete="off">
-          <button class="btn btn--primary btn--sm" type="submit" id="aiSend">Perguntar</button>
+          <div class="seg seg--sm" id="aiKind" role="group" aria-label="Modo da pergunta">
+            <button type="button" data-kind="unica" aria-pressed="true">Consulta única</button>
+            <button type="button" data-kind="agente" aria-pressed="false">Agente</button>
+          </div>
+          <div class="console__row">
+            <label class="sr" for="aiInput">Pergunta ao assistente</label>
+            <input id="aiInput" type="text" minlength="3" maxlength="500" placeholder="Pergunte algo sobre o banco sintético…" autocomplete="off">
+            <button class="btn btn--primary btn--sm" type="submit" id="aiSend">Perguntar</button>
+          </div>
         </form>
         <div class="console__foot">
           <button class="btn btn--ghost btn--sm" type="button" id="aiReplay"><svg class="icon" aria-hidden="true"><use href="#i-repeat"/></svg>Reproduzir de novo</button>

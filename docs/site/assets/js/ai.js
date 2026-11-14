@@ -1,8 +1,9 @@
 /* Experiência de IA/RAG.
    SIMULAÇÃO (padrão): cenários gravados em scripts/build_site_snapshot.py. O contexto do RAG e o resultado vêm de execução real
    (índice BM25 e guarda de SQL do repositório, sobre o banco sintético); o SQL e o resumo foram escritos à mão e o LLM NÃO foi chamado.
-   AO VIVO: só quando /saude responde na mesma origem. Então o formulário envia a pergunta ao /perguntar da própria API;
-   nenhuma chave passa pelo navegador. */
+   AO VIVO: só quando /saude responde na mesma origem. O formulário aparece com dois modos:
+   Consulta única envia a pergunta ao /perguntar; Agente envia ao /agente (várias consultas SQL, até cerca de 3 minutos).
+   Nenhuma chave passa pelo navegador. */
 (function () {
   "use strict";
   var IF = window.IF, el = IF.el, D = window.INFOFROTA_SNAPSHOT;
@@ -60,7 +61,63 @@
     st.li.className = state ? "is-" + state : "";
     if (content !== undefined) { IF.clear(st.body); [].concat(content).forEach(function (c) { if (c) st.body.appendChild(typeof c === "object" ? c : document.createTextNode(c)); }); }
   }
-  function short(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+  function short(s, n) { s = String(s == null ? "" : s); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+  var NOTA_SINT = "Dados sintéticos de demonstração, não representam a operação real da CETURBES.";
+  function msgErro(err, agente) {
+    if (err && err.status === 401) return "A API exige chave de acesso (X-API-Key). Por segurança, este site nunca envia chaves.";
+    if (err && err.status === 422) return "Pergunta inválida: use de 3 a 500 caracteres.";
+    if (err && err.status === 429) return "Limite de pedidos por minuto ou cota diária do provedor atingido. Aguarde e tente de novo.";
+    if (err && err.status === 502) return "O modelo falhou ao responder. Confira se o provedor está no ar e tente de novo.";
+    if (err && err.status === 503) return "O modelo não está configurado ou está indisponível no momento.";
+    if (err && err.status) return "A API respondeu com erro (" + err.status + "). Confira o provedor e a chave do modelo no backend.";
+    if (err && err.name === "AbortError") return agente
+      ? "A espera passou de 5 minutos e foi interrompida. Tente uma pergunta mais direta."
+      : "A API não respondeu a tempo. Confira se ela continua rodando.";
+    return "Sem resposta da API. Confira se ela continua rodando.";
+  }
+  function sqlPre(sql) {
+    var pre = el("pre", { class: "sqlblock" });
+    sqlNodes(String(sql || "")).forEach(function (x) { pre.appendChild(typeof x === "string" ? document.createTextNode(x) : x); });
+    return pre;
+  }
+  /* Só as consultas SQL: a entrada é o SELECT e a observação vem truncada. */
+  function blocoPassos(passos) {
+    var sqls = (passos || []).filter(function (p) { return p && p.ferramenta === "sql"; });
+    var det = el("details", { class: "apassos" });
+    det.appendChild(el("summary", { text: sqls.length ? "Consultas SQL (" + sqls.length + ")" : "Consultas SQL (nenhuma)" }));
+    if (!sqls.length) {
+      det.appendChild(el("p", { class: "apasso", text: "O agente não executou consulta SQL." }));
+      return det;
+    }
+    sqls.forEach(function (p, i) {
+      var obs = p.observacao == null ? "" : String(p.observacao);
+      det.appendChild(el("div", { class: "apasso" }, [
+        el("p", { class: "eyebrow-sm", text: "Consulta " + (i + 1) }),
+        sqlPre(p.entrada),
+        el("p", { text: obs ? short(obs, 300) : "Sem resultado resumido." })
+      ]));
+    });
+    return det;
+  }
+
+  var relogio = null;
+  function pararRelogio() { if (relogio) { clearInterval(relogio); relogio = null; } }
+  function tempoDecorrido(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  function iniciarRelogio(node, my) {
+    pararRelogio();
+    var t0 = Date.now();
+    function tick() {
+      if (my !== token) { pararRelogio(); return; }
+      node.textContent = "Tempo decorrido: " + tempoDecorrido(Date.now() - t0);
+    }
+    tick();
+    relogio = setInterval(tick, 1000);
+    return t0;
+  }
 
   function setMode(isLive) {
     modeEl.className = "mode " + (isLive ? "mode--live" : "mode--sim");
@@ -70,6 +127,8 @@
 
   /* ---------- reprodução (simulada ou real) ---------- */
   async function play(c, isLive, myToken) {
+    pararRelogio();
+    chat.setAttribute("aria-busy", "false");
     var alive = function () { return myToken === token; };
     setMode(isLive);
     IF.clear(chat);
@@ -153,19 +212,55 @@
 
   /* ---------- modo ao vivo ---------- */
   var NOTE_SIM = "Simulação: contexto do RAG e resultado vêm de execução real sobre o banco sintético; o SQL e o resumo foram escritos à mão e o modelo de linguagem não foi chamado.";
+  var noteBase = NOTE_SIM;
+  var kind = "unica";
+  var kindEl = IF.$("#aiKind");
+  function paintNote() {
+    var extra = "";
+    if (live && kind === "agente") extra = " Modo agente: várias consultas SQL no servidor, em geral até 3 minutos. A página segue utilizável enquanto espera.";
+    else if (live) extra = " Modo consulta única: uma pergunta vira um SQL. Uma pergunta a cada 3 s; a API também limita por IP.";
+    note.textContent = noteBase + extra;
+  }
+  function setKind(k) {
+    kind = k;
+    IF.$$("button", kindEl).forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-kind") === k));
+    });
+    input.placeholder = k === "agente"
+      ? "Pergunta que pode exigir várias consultas no banco sintético…"
+      : "Pergunte algo sobre o banco sintético…";
+    paintNote();
+  }
+  IF.$$("button", kindEl).forEach(function (b) {
+    b.addEventListener("click", function () { setKind(b.getAttribute("data-kind")); });
+  });
+  kindEl.addEventListener("keydown", function (e) {
+    var dir = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 1, ArrowUp: -1 }[e.key];
+    if (!dir) return;
+    var bs = IF.$$("button", kindEl), i = bs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    var n = (i + dir + bs.length) % bs.length;
+    bs[n].focus();
+    setKind(bs[n].getAttribute("data-kind"));
+  });
   note.textContent = NOTE_SIM;
   setMode(false);
 
   var cooling = false;
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var q = input.value.trim();
-    if (q.length < 3 || cooling) { input.focus(); return; }
-    cooling = true; send.disabled = true;
-    var my = ++token; lastScenario = null;
-    setMode(true);
-    IF.$$("button", scen).forEach(function (b) { b.setAttribute("aria-selected", "false"); });
+  function liberar() { setTimeout(function () { cooling = false; send.disabled = false; }, 3000); }
+
+  function falhaAoVivo(my, out, steps, err, agente) {
+    if (my !== token) return;
+    pararRelogio();
+    chat.setAttribute("aria-busy", "false");
+    IF.clear(out); out.classList.add("is-block"); out.textContent = msgErro(err, agente);
+    if (steps) mark(steps[0], "fail");
+  }
+
+  function rodarPergunta(q, my) {
     IF.clear(chat);
+    chat.setAttribute("aria-busy", "true");
     chat.appendChild(el("div", { class: "msg msg--user", text: q }));
     var out = el("div", { class: "msg__text" }, el("span", { class: "thinking", "aria-label": "Processando" }, [el("i"), el("i"), el("i")]));
     chat.appendChild(el("div", { class: "msg msg--ai" }, [el("div", { class: "msg__who" }, [IF.icon("i-bot"), el("span", { text: "Assistente InfoFrota" })]), out]));
@@ -181,24 +276,85 @@
                (r.linhas || []).length + " linha(s) retornada(s)" + (r.truncado ? " (truncado)" : "") + (r.tentativas > 1 ? " após " + r.tentativas + " tentativas." : ".")
       };
       return play(c, true, my);
-    }).catch(function (err) {
+    }).catch(function (err) { falhaAoVivo(my, out, steps, err, false); })
+      .then(liberar);
+  }
+
+  function rodarAgente(q, my) {
+    IF.clear(chat);
+    chat.setAttribute("aria-busy", "true");
+    chat.appendChild(el("div", { class: "msg msg--user", text: q }));
+    var out = el("div", { class: "msg__text" }, el("span", { class: "thinking", "aria-label": "Processando" }, [el("i"), el("i"), el("i")]));
+    var espera = el("p", { class: "muted", text: "O agente está consultando o banco. Pode levar até 3 minutos." });
+    chat.appendChild(el("div", { class: "msg msg--ai" }, [
+      el("div", { class: "msg__who" }, [IF.icon("i-bot"), el("span", { text: "Assistente InfoFrota · agente" })]),
+      out, espera
+    ]));
+    IF.clear(trace);
+    var clock = el("p", { class: "elapsed", role: "timer", "aria-live": "off" });
+    trace.appendChild(el("li", { class: "is-active" }, [
+      el("span", { class: "dot" }, IF.icon("i-timer")),
+      el("div", null, [el("h4", { text: "Agente em execução" }), el("div", { class: "tb" }, [
+        "As consultas rodam no servidor. Dá para continuar usando a página.",
+        clock
+      ])])
+    ]));
+    var t0 = iniciarRelogio(clock, my);
+    IF.api.agente(q).then(function (r) {
       if (my !== token) return;
-      var msg = err.status === 401 ? "A API exige chave de acesso (X-API-Key). Por segurança, este site nunca envia chaves."
-        : err.status === 429 ? "Limite de perguntas por minuto atingido. Aguarde um instante."
-        : err.status === 422 ? "Pergunta inválida: use de 3 a 500 caracteres."
-        : err.status ? "A API respondeu com erro (" + err.status + "). Confira o provedor e a chave do modelo no backend."
-        : "Sem resposta da API. Confira se ela continua rodando.";
-      IF.clear(out); out.classList.add("is-block"); out.textContent = msg;
-      mark(steps[0], "fail");
-    }).then(function () { setTimeout(function () { cooling = false; send.disabled = false; }, 3000); });
+      pararRelogio();
+      chat.setAttribute("aria-busy", "false");
+      var gasto = "Tempo decorrido: " + tempoDecorrido(Date.now() - t0);
+      IF.clear(out);
+      var texto = r && r.texto ? String(r.texto) : (r && r.erro ? "O agente não concluiu: " + r.erro : "O agente não devolveu texto.");
+      out.textContent = texto;
+      if (!r || !r.texto) out.classList.add("is-block");
+      espera.className = "nota-sint";
+      espera.textContent = (r && r.nota) ? String(r.nota) : NOTA_SINT;
+      IF.clear(trace);
+      trace.appendChild(el("li", { class: "is-done" }, [
+        el("span", { class: "dot" }, IF.icon("i-database")),
+        el("div", null, [
+          el("h4", { text: "Consultas do agente" }),
+          el("div", { class: "tb" }, [
+            el("p", { class: "elapsed", text: "Concluído. " + gasto }),
+            (r && r.texto && r.erro) ? el("p", { text: String(r.erro) }) : null,
+            blocoPassos((r && r.passos) || [])
+          ])
+        ])
+      ]));
+    }).catch(function (err) {
+      falhaAoVivo(my, out, null, err, true);
+      if (my !== token) return;
+      if (espera.parentNode) espera.parentNode.removeChild(espera);
+      IF.clear(trace);
+      trace.appendChild(el("li", { class: "is-fail" }, [
+        el("span", { class: "dot" }, IF.icon("i-triangle-alert")),
+        el("div", null, [el("h4", { text: "Agente interrompido" }), el("div", { class: "tb" }, el("p", { class: "elapsed", text: "Tempo decorrido: " + tempoDecorrido(Date.now() - t0) }))])
+      ]));
+    }).then(liberar);
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = input.value.trim();
+    if (q.length < 3 || cooling) { input.focus(); return; }
+    cooling = true; send.disabled = true;
+    var my = ++token; lastScenario = null;
+    pararRelogio();
+    setMode(true);
+    IF.$$("button", scen).forEach(function (b) { b.setAttribute("aria-selected", "false"); });
     input.value = "";
+    if (kind === "agente") rodarAgente(q, my);
+    else rodarPergunta(q, my);
   });
 
   if (IF.api.disponivel) {
     IF.api.saude().then(function () {
       form.classList.remove("hidden"); live = true;
-      note.textContent = NOTE_SIM + " A API local respondeu: o campo acima envia perguntas reais ao modelo configurado (uma a cada 3 s; a API também limita por IP).";
-    }, function () { /* sem API: permanece em simulação */ });
+      noteBase = NOTE_SIM + " A API local respondeu: o seletor acima escolhe consulta única ou agente. O navegador não envia chaves.";
+      paintNote();
+    }, function () { /* sem API: permanece em simulação; o seletor fica oculto com o formulário */ });
   }
 
   IF.whenVisible(IF.$("#aiConsole"), function () { select(0); });

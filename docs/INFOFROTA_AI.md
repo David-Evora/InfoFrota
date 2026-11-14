@@ -62,6 +62,7 @@ Rotas:
 |---|---|---|
 | GET | `/saude` | Estado do serviço e período dos dados |
 | POST | `/perguntar` | Pergunta em português → SQL e resultado |
+| POST | `/agente` | Pergunta em português → agente que consulta várias vezes → resposta e passos |
 | GET | `/alertas` | Alertas filtrados por tipo, janela e limite |
 | GET | `/resumo` | Resumo de um dia por linha |
 
@@ -90,6 +91,16 @@ A configuração do provedor é feita no backend. No ambiente Docker, o arquivo 
 - `INFOFROTA_LIMITE_POR_MIN`: limite de chamadas a `/perguntar` por minuto e por IP.
 
 A chave `OPENAI_API_KEY` fica exclusivamente no backend; não deve ser copiada para nós do n8n. `INFOFROTA_API_KEY`, se habilitada, é uma chave interna distinta.
+
+### Agente multi-etapas e MCP
+
+`infofrota_ai/agente.py` resolve perguntas que exigem mais de uma consulta. O modelo usa Tool Calling nativo (API compatível com OpenAI) com duas ferramentas, `consultar_esquema` e `executar_sql`, uma chamada por turno e limite de passos; toda consulta passa pela guarda somente leitura de `db.py`. Uma espera por limite de taxa (429) repete a chamada, e a cota diária esgotada encerra com erro claro.
+
+Corpo de `POST /agente`: `{"pergunta": "..."}`. Resposta: `texto`, `passos` (ferramenta, entrada, observação), `erro` e `nota`. Pode levar de segundos a minutos com o limite gratuito do provedor.
+
+`infofrota_ai/mcp_server.py` expõe as mesmas ferramentas por MCP (`pip install -r requirements-mcp.txt`; `python -m infofrota_ai.mcp_server`), para clientes como o Claude Desktop. O workflow `n8n/perguntar-agente.json` chama `POST /agente` por HTTP Request; a chave do provedor continua só no backend.
+
+A avaliação do agente contra a consulta única (13 perguntas de vários passos, dados sintéticos, avaliação diagnóstica) está no `README.md`.
 
 ## 5. Docker e n8n
 

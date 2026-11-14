@@ -15,7 +15,7 @@
     rag: { row: "B", t: "RAG de esquema (BM25)", s: "infofrota_ai/rag.py", i: "i-search", st: "impl", layer: "Núcleo",
       d: "Recupera as tabelas, os valores válidos e as regras que importam para a pergunta e as entrega ao prompt.", f: ["infofrota_ai/rag.py", "tests/test_rag.py"] },
     api: { row: "B", t: "API FastAPI", s: "infofrota_ai/api.py", i: "i-server", st: "impl", layer: "Núcleo",
-      d: "Rotas /saude, /perguntar, /alertas e /resumo, com chave opcional (X-API-Key), limite por IP e CORS opcional. Serve também esta página e o painel.", f: ["infofrota_ai/api.py", "tests/test_api.py"] },
+      d: "Rotas /saude, /perguntar, /agente, /alertas e /resumo, com chave opcional (X-API-Key), limite por IP e CORS opcional. Serve também esta página e o painel.", f: ["infofrota_ai/api.py", "tests/test_api.py"] },
     llm: { row: "B", t: "Provedor de LLM", s: "infofrota_ai/llm.py", i: "i-bot", st: "impl", layer: "Núcleo",
       d: "Anthropic, API compatível com OpenAI (como a Groq) ou modelo local com Hugging Face e PEFT. A chave fica no backend.", f: ["infofrota_ai/llm.py", "infofrota_ai/hf_llm.py"] },
     n8n: { row: "C", t: "Workflow n8n", s: "n8n/alerta-critico.json", i: "i-workflow", st: "impl", layer: "Consumo e automação",

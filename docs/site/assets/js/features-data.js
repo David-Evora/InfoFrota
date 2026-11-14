@@ -106,9 +106,9 @@ window.IF_FEATURES = {
 
     {
       id: "fastapi", cat: "api", status: "impl", icon: "i-server",
-      titulo: "API FastAPI com quatro rotas",
-      resumo: "Saúde, perguntar, alertas e resumo. O modelo só é carregado na primeira pergunta.",
-      detalhe: "Rotas: /saude, /perguntar, /alertas e /resumo. A interface do protótipo e este site são servidos pela própria API.",
+      titulo: "API FastAPI com cinco rotas",
+      resumo: "Saúde, perguntar, agente, alertas e resumo. O modelo só é carregado na primeira pergunta.",
+      detalhe: "Rotas: /saude, /perguntar, /agente, /alertas e /resumo. A interface do protótipo e este site são servidos pela própria API.",
       evidence: ["infofrota_ai/api.py", "tests/test_api.py"]
     },
     {

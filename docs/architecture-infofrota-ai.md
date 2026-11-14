@@ -13,6 +13,10 @@
 9. **API:** FastAPI expõe `/saude`, `/perguntar`, `/alertas` e `/resumo`.
 10. **Automação:** n8n consulta `/alertas` periodicamente e envia notificações para um webhook configurado localmente.
 
+## Agente e MCP
+
+`agente.py` (Tool Calling nativo, SQL somente leitura pela guarda de `db.py`, limite de passos) é exposto em `POST /agente` e, pelas mesmas ferramentas, em `mcp_server.py`. O n8n (`n8n/perguntar-agente.json`) apenas orquestra a chamada HTTP; a chave do provedor LLM fica só no backend.
+
 ## Componentes principais
 
 | Caminho | Responsabilidade |

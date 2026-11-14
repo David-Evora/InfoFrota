@@ -99,6 +99,13 @@
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pergunta: pergunta, texto: false })
           }, 60000);
+        },
+        /* O agente pode encadear várias consultas; o provedor às vezes leva até 3 minutos. */
+        agente: function (pergunta) {
+          return call("agente", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pergunta: pergunta })
+          }, 300000);
         }
       };
     })()
